@@ -16,7 +16,7 @@ public class LambdaFunction
         var referer = request.Headers["Referer"];
         var hashHeader = request.Headers[LambdaSettings.HashHeader];
 
-        if (!referer.Contains(LambdaSettings.DomainName) || hashHeader != LambdaSettings.HashHeader)
+        if (!referer.Contains(LambdaSettings.DomainName) || hashHeader != Settings.ExpectedHashValue)
         {
             return new APIGatewayProxyResponse
             {
