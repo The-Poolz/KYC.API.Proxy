@@ -9,7 +9,7 @@ namespace KYC.API.Proxy;
 
 public class LambdaFunction
 {
-    public LambdaSettings Settings { get; set; } = new();
+    private readonly LambdaSettings Settings = new();
 
     public async Task<JToken> RunAsync(JToken request)
     {
