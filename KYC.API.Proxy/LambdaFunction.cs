@@ -12,7 +12,7 @@ public class LambdaFunction
 
     public async Task<JToken> RunAsync(JObject request)
     {
-        if (!request.ContainsKey("Address"))
+        if (!request.ContainsKey("Address") || request["Address"]?.ToString() == "0x0000000000000000000000000000000000000000")
         {
             return new JObject()
             {
