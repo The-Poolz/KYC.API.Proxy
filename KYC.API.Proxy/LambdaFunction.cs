@@ -1,9 +1,5 @@
-using Amazon;
 using Flurl.Http;
-using Amazon.Lambda;
-using Newtonsoft.Json;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.Model;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
