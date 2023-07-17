@@ -20,13 +20,11 @@ public class LambdaFunction
             };
         }
 
-        var content = await $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{request["Address"]}"
+        return await $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{request["Address"]}"
             .AllowHttpStatus("404")
             .WithHeader("Authorization", settings.SecretApiKey)
             .WithHeader("cache-control", "no-cache")
             .GetAsync()
             .ReceiveJson<JToken>();
-
-        return content;
     }
 }
