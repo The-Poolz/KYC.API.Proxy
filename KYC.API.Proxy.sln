@@ -5,6 +5,10 @@ VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy", "KYC.API.Proxy\KYC.API.Proxy.csproj", "{6E97720C-3030-4F49-9851-C61DC83012B9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{F93EA2A4-144A-418B-AF91-25EB9E23835A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KYC.API.Proxy.Tests", "LambdaFunctionTests\KYC.API.Proxy.Tests.csproj", "{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +19,16 @@ Global
 		{6E97720C-3030-4F49-9851-C61DC83012B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E97720C-3030-4F49-9851-C61DC83012B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E97720C-3030-4F49-9851-C61DC83012B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{45990EB8-1736-4370-B0F9-C5FDBDB4B3A4} = {F93EA2A4-144A-418B-AF91-25EB9E23835A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0803A1E1-195C-4AC0-A580-70F2086DE96D}

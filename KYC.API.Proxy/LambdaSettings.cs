@@ -11,8 +11,7 @@ public class LambdaSettings
 
     public static string DomainName => EnvManager.GetEnvironmentValue<string>("DOMAIN_NAME");
     public static string ClientId => EnvManager.GetEnvironmentValue<string>("CLIENT_ID");
-
-    public string SecretApiKey => SecretManager.GetSecretValue(SecretId, SecretApiKeyName);
+    public virtual string SecretApiKey => SecretManager.GetSecretValue(SecretId, SecretApiKeyName);
 
     public LambdaSettings(SecretManager? secretManager = null)
     {
