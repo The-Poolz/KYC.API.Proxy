@@ -10,10 +10,9 @@ public class LambdaFunction
 {
     private readonly LambdaSettings settings;
 
-    public LambdaFunction() 
-    {
-        settings = new();
-    }
+    public LambdaFunction()
+        : this(new LambdaSettings())
+    { }
     public LambdaFunction(LambdaSettings settings)
     {
         this.settings = settings;
