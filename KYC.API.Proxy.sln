@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy", "KYC.API.Proxy\KYC.API.Proxy.csproj", "{6E97720C-3030-4F49-9851-C61DC83012B9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0E291973-D91C-486C-A9D2-8926C656A382}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{753B9E81-B38A-4B54-830B-F80B129D5E6F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy", "src\KYC.API.Proxy\KYC.API.Proxy.csproj", "{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy.Tests", "tests\KYC.API.Proxy.Tests\KYC.API.Proxy.Tests.csproj", "{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,13 +17,21 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6E97720C-3030-4F49-9851-C61DC83012B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6E97720C-3030-4F49-9851-C61DC83012B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6E97720C-3030-4F49-9851-C61DC83012B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6E97720C-3030-4F49-9851-C61DC83012B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2} = {0E291973-D91C-486C-A9D2-8926C656A382}
+		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2} = {753B9E81-B38A-4B54-830B-F80B129D5E6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0803A1E1-195C-4AC0-A580-70F2086DE96D}
