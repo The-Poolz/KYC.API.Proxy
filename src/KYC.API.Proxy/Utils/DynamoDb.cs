@@ -1,4 +1,5 @@
-﻿using Amazon.DynamoDBv2;
+﻿using Newtonsoft.Json;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
 namespace KYC.API.Proxy.Utils;
@@ -18,30 +19,34 @@ public class DynamoDb
 
     public async Task<string[]> GetWalletsAsync(string wallet)
     {
-        var request = new QueryRequest
+        var scanRequest = new ScanRequest
         {
             TableName = "UserData",
-            KeyConditionExpression = "EvmWallet = :v_key",
+            FilterExpression = "EvmWallet = :v_val OR contains(EvmWallets, :v_val)",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { ":v_key", new AttributeValue { S = wallet } }
+                { ":v_val", new AttributeValue { S = wallet } }
             }
         };
 
-        var response = await client.QueryAsync(request);
+        var scanResponse = await client.ScanAsync(scanRequest);
 
-        if (response.Items.Count == 0)
-        {
+        Console.WriteLine(JsonConvert.SerializeObject(scanResponse));
+
+        if (scanResponse.Items.Count <= 0)
             return Array.Empty<string>();
-        }
 
-        var evmWallets = response.Items[0]["EvmWallets"].L.Select(x => x.S).ToList();
-        var evmWallet = response.Items[0]["EvmWallet"].S;
+        var evmWallets = scanResponse.Items[0]["EvmWallets"].L.Select(x => x.S).ToList();
+        var evmWallet = scanResponse.Items[0]["EvmWallet"].S;
 
-        return wallet == evmWallet ? evmWallets.ToArray() : 
-            new List<string>(evmWallets)
-            {
-                evmWallet
-            }.ToArray();
+        if (wallet == evmWallet)
+            return evmWallets.ToArray();
+
+        if (!evmWallets.Contains(wallet))
+            return Array.Empty<string>();
+
+        evmWallets.Remove(wallet);
+        evmWallets.Add(evmWallet);
+        return evmWallets.ToArray();
     }
 }
