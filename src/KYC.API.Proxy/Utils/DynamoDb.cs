@@ -19,8 +19,8 @@ public class DynamoDb
     public virtual string[] GetWallets(string wallet)
     {
         var user = GetItem(wallet);
-        if (user == null) return Array.Empty<string>();
-        if (!user.ContainsKey("EvmWallets")) return Array.Empty<string>();
+        if (user == null || !user.ContainsKey("EvmWallets"))
+            return Array.Empty<string>();
 
         var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
 
@@ -28,8 +28,8 @@ public class DynamoDb
         foreach (var associatedWallet in associatedWallets)
         {
             var associatedUser = GetItem(associatedWallet);
-            if (associatedUser == null) continue;
-            if (!associatedUser.ContainsKey("EvmWallets")) continue;
+            if (associatedUser == null || !associatedUser.ContainsKey("EvmWallets"))
+                continue;
 
             var isAssociatedWallet = associatedUser["EvmWallets"].L.Find(x => x.S == wallet);
             if (isAssociatedWallet == null) continue;

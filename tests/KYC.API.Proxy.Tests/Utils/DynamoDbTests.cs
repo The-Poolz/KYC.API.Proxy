@@ -190,7 +190,6 @@ public class DynamoDbTests
                     }
                 }
             }
-
         };
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
