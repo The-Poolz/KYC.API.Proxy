@@ -37,37 +37,37 @@ public class LambdaFunctionTests
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsInvalid()
+    internal void Run_ShouldReturnForbidden_WhenAddressIsInvalid()
     {
-        var request = new JObject()
+        var request = new JObject
         {
             { "Address", "0x0000000000000000000000000000000000000000" }
         };
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(403, result["StatusCode"]);
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsMissing()
+    internal void Run_ShouldReturnForbidden_WhenAddressIsMissing()
     {
         var request = new JObject();
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(403, result["StatusCode"]);
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnExpectedResponse_WhenAddressIsValid()
+    internal void Run_ShouldReturnExpectedResponse_WhenAddressIsValid()
     {
-        var request = new JObject()
+        var request = new JObject
         {
             { "Address", "0x0000000000000000000000000000000000000001" }
         };
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(response, result);
     }
