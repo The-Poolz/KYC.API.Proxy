@@ -122,6 +122,33 @@ public class LambdaFunctionTests
         Assert.Equal(expected, result);
     }
 
+    [Fact]
+    internal void Run_WhenStatusBeError()
+    {
+        var request = new JObject
+        {
+            { "Address", TestAddress }
+        };
+        var errorResponse = new JObject
+        {
+            { "status", "error" }
+        };
+        var mockDynamoDb = new Mock<DynamoDb>();
+        mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
+            .Returns(new[] { AssociatedAddress });
+
+        var mockHttpCall = new Mock<HttpCall>();
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
+            .Returns(errorResponse);
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
+            .Returns(errorResponse);
+        var lambdaFunction = MockLambdaFunction(mockHttpCall);
+
+        var result = lambdaFunction.Run(request);
+
+        Assert.Equal(errorResponse, result);
+    }
+
     private LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
     {
         if (mockHttpCall == null)
