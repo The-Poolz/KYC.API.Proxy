@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
 namespace KYC.API.Proxy.Utils;
@@ -17,36 +16,45 @@ public class DynamoDb
         this.client = client;
     }
 
-    public async Task<string[]> GetWalletsAsync(string wallet)
+    public string[] GetWallets(string wallet)
     {
-        var scanRequest = new ScanRequest
+        var user = GetItem(wallet);
+        if (user == null) return Array.Empty<string>();
+        if (!user.ContainsKey("EvmWallets")) return Array.Empty<string>();
+
+        var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
+
+        var wallets = new List<string>();
+        foreach (var associatedWallet in associatedWallets)
+        {
+            var associatedUser = GetItem(associatedWallet);
+            if (associatedUser == null) continue;
+            if (!associatedUser.ContainsKey("EvmWallets")) continue;
+
+            var isAssociatedWallet = associatedUser["EvmWallets"].L.Find(x => x.S == wallet);
+            if (isAssociatedWallet == null) continue;
+
+            wallets.Add(isAssociatedWallet.S);
+        }
+
+        return wallets.ToArray();
+    }
+
+    public Dictionary<string, AttributeValue>? GetItem(string primaryKey)
+    {
+        var request = new GetItemRequest
         {
             TableName = "UserData",
-            FilterExpression = "EvmWallet = :v_val OR contains(EvmWallets, :v_val)",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            Key = new Dictionary<string, AttributeValue>
             {
-                { ":v_val", new AttributeValue { S = wallet } }
+                { "EvmWallet", new AttributeValue { S = primaryKey } }
             }
         };
 
-        var scanResponse = await client.ScanAsync(scanRequest);
+        var response = client.GetItemAsync(request)
+            .GetAwaiter()
+            .GetResult();
 
-        Console.WriteLine(JsonConvert.SerializeObject(scanResponse));
-
-        if (scanResponse.Items.Count <= 0)
-            return Array.Empty<string>();
-
-        var evmWallets = scanResponse.Items[0]["EvmWallets"].L.Select(x => x.S).ToList();
-        var evmWallet = scanResponse.Items[0]["EvmWallet"].S;
-
-        if (wallet == evmWallet)
-            return evmWallets.ToArray();
-
-        if (!evmWallets.Contains(wallet))
-            return Array.Empty<string>();
-
-        evmWallets.Remove(wallet);
-        evmWallets.Add(evmWallet);
-        return evmWallets.ToArray();
+        return response.Item.Count == 0 ? null : response.Item;
     }
 }
