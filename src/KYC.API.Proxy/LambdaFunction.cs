@@ -22,7 +22,7 @@ public class LambdaFunction
         this.dynamoDb = dynamoDb;
     }
 
-    public async Task<JToken> RunAsync(JObject request)
+    public JToken Run(JObject request)
     {
         if (!request.ContainsKey("Address") || request["Address"]!.ToString() == "0x0000000000000000000000000000000000000000")
         {
@@ -31,20 +31,38 @@ public class LambdaFunction
                 { "StatusCode", 403 }
             };
         }
-
         var address = request["Address"]!.ToString();
+
+        var response = GetBlockPassResponse(address);
+
+        if (response["status"]?.ToString() != "error")
+        {
+            return response;
+        }
 
         var wallets = dynamoDb.GetWallets(address);
         foreach (var wallet in wallets)
         {
-            Console.WriteLine(wallet);
+            response = GetBlockPassResponse(wallet);
+            if (response["status"]?.ToString() != "error")
+            {
+                return response;
+            }
         }
 
-        return await $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{address}"
+        return new JObject
+        {
+            new JProperty("status", "error")
+        };
+    }
+
+    private JToken GetBlockPassResponse(string address) => 
+        $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{address}"
             .AllowHttpStatus("404")
             .WithHeader("Authorization", settings.SecretApiKey)
             .WithHeader("cache-control", "no-cache")
             .GetAsync()
-            .ReceiveJson<JToken>();
-    }
+            .ReceiveJson<JToken>()
+            .GetAwaiter()
+            .GetResult();
 }
