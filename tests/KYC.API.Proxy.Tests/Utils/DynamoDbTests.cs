@@ -1,7 +1,7 @@
 ﻿using Moq;
 using Xunit;
-using Amazon.DynamoDBv2;
 using FluentAssertions;
+using Amazon.DynamoDBv2;
 using KYC.API.Proxy.Utils;
 using Amazon.DynamoDBv2.Model;
 
@@ -9,13 +9,20 @@ namespace KYC.API.Proxy.Tests.Utils;
 
 public class DynamoDbTests
 {
+    private readonly Mock<IAmazonDynamoDB> client;
+    private readonly DynamoDb dynamoDb;
+
+    public DynamoDbTests()
+    {
+        client = new Mock<IAmazonDynamoDB>();
+        dynamoDb = new DynamoDb(client.Object);
+    }
+
     [Fact]
     internal void GetWallets_UserNotFound()
     {
-        var client = new Mock<IAmazonDynamoDB>();
         client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
-            .ReturnsAsync(new GetItemResponse());
-        var dynamoDb = new DynamoDb(client.Object);
+            .ReturnsAsync(CreateGetItemResponse(new Dictionary<string, AttributeValue>()));
 
         var result = dynamoDb.GetWallets("wallet");
 
@@ -25,16 +32,9 @@ public class DynamoDbTests
     [Fact]
     internal void GetWallets_EvmWalletsNotFoundInUser()
     {
-        var client = new Mock<IAmazonDynamoDB>();
+        var item = new Dictionary<string, AttributeValue> { { "EvmWallet", new AttributeValue() } };
         client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
-            .ReturnsAsync(new GetItemResponse
-            {
-                Item = new Dictionary<string, AttributeValue>
-                {
-                    { "EvmWallet", new AttributeValue() }
-                }
-            });
-        var dynamoDb = new DynamoDb(client.Object);
+            .ReturnsAsync(CreateGetItemResponse(item));
 
         var result = dynamoDb.GetWallets("wallet");
 
@@ -44,96 +44,39 @@ public class DynamoDbTests
     [Fact]
     internal void GetWallets_AssociatedUserNotFound()
     {
-        const string wallet = "wallet";
-        var client = new Mock<IAmazonDynamoDB>();
-
-        var firstResponse = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>
+        var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
             {
-                {
-                    "EvmWallet",
-                    new AttributeValue 
-                    {
-                        S = wallet
-                    }
-                },
-                {
-                    "EvmWallets",
-                    new AttributeValue
-                    {
-                        L = new List<AttributeValue>
-                        {
-                            new() { S = "associatedWallet" }
-                        }
-                    }
-                }
-            }
-        };
-        var emptyResponse = new GetItemResponse { Item = new Dictionary<string, AttributeValue>() };
+                { "EvmWallet", new AttributeValue { S = "wallet" } },
+                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+            });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
-            .Returns(Task.FromResult(firstResponse))
-            .Returns(Task.FromResult(emptyResponse));
+            .Returns(Task.FromResult(firstItem))
+            .Returns(Task.FromResult(CreateGetItemResponse(new Dictionary<string, AttributeValue>())));
 
-        var dynamoDb = new DynamoDb(client.Object);
-
-        var result = dynamoDb.GetWallets(wallet);
+        var result = dynamoDb.GetWallets("wallet");
 
         result.Should().BeEmpty();
     }
 
     [Fact]
-    internal void GetWallets_EvmWalletsNotFoundInAssociatedUser()
+    internal void GetWallets_AssociatedUserHasNoEvmWallets()
     {
-        const string wallet = "wallet";
-        const string associatedWallet = "associatedWallet";
-        var client = new Mock<IAmazonDynamoDB>();
-
-        var firstResponse = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>
+        var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
             {
-                {
-                    "EvmWallet",
-                    new AttributeValue
-                    {
-                        S = wallet
-                    }
-                },
-                {
-                    "EvmWallets",
-                    new AttributeValue
-                    {
-                        L = new List<AttributeValue>
-                        {
-                            new() { S = associatedWallet }
-                        }
-                    }
-                }
-            }
-        };
-        var secondResponse = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>
+                { "EvmWallet", new AttributeValue { S = "wallet" } },
+                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+            });
+        var secondItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
             {
-                {
-                    "EvmWallet",
-                    new AttributeValue
-                    {
-                        S = associatedWallet
-                    }
-                }
-            }
-        };
+                { "EvmWallet", new AttributeValue { S = "associatedWallet" } }
+            });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
-            .Returns(Task.FromResult(firstResponse))
-            .Returns(Task.FromResult(secondResponse));
+            .Returns(Task.FromResult(firstItem))
+            .Returns(Task.FromResult(secondItem));
 
-        var dynamoDb = new DynamoDb(client.Object);
-
-        var result = dynamoDb.GetWallets(wallet);
+        var result = dynamoDb.GetWallets("wallet");
 
         result.Should().BeEmpty();
     }
@@ -141,65 +84,25 @@ public class DynamoDbTests
     [Fact]
     internal void GetWallets_AssociatedWalletFound()
     {
-        const string wallet = "wallet";
-        const string associatedWallet = "associatedWallet";
-        var client = new Mock<IAmazonDynamoDB>();
-
-        var firstResponse = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>
+        var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
             {
-                {
-                    "EvmWallet",
-                    new AttributeValue
-                    {
-                        S = wallet
-                    }
-                },
-                {
-                    "EvmWallets",
-                    new AttributeValue
-                    {
-                        L = new List<AttributeValue>
-                        {
-                            new() { S = associatedWallet }
-                        }
-                    }
-                }
-            }
-        };
-        var secondResponse = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>
+                { "EvmWallet", new AttributeValue { S = "wallet" } },
+                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+            });
+        var secondItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
             {
-                {
-                    "EvmWallet",
-                    new AttributeValue
-                    {
-                        S = associatedWallet
-                    }
-                },
-                {
-                    "EvmWallets",
-                    new AttributeValue
-                    {
-                        L = new List<AttributeValue>
-                        {
-                            new() { S = wallet }
-                        }
-                    }
-                }
-            }
-        };
+                { "EvmWallet", new AttributeValue { S = "associatedWallet" } },
+                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "wallet" } } } }
+            });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
-            .Returns(Task.FromResult(firstResponse))
-            .Returns(Task.FromResult(secondResponse));
-
-        var dynamoDb = new DynamoDb(client.Object);
+            .Returns(Task.FromResult(firstItem))
+            .Returns(Task.FromResult(secondItem));
 
         var result = dynamoDb.GetWallets("wallet");
 
-        result.Should().BeEquivalentTo(associatedWallet);
+        result.Should().BeEquivalentTo("associatedWallet");
     }
+
+    private static GetItemResponse CreateGetItemResponse(Dictionary<string, AttributeValue> item) => new() { Item = item };
 }
