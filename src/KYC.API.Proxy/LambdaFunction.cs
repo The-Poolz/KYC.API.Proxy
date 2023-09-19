@@ -34,7 +34,7 @@ public class LambdaFunction
 
         var address = request["Address"]!.ToString();
 
-        var wallets = await dynamoDb.GetWalletsAsync(address);
+        var wallets = dynamoDb.GetWallets(address);
         foreach (var wallet in wallets)
         {
             Console.WriteLine(wallet);

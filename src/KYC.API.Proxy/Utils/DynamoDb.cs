@@ -16,7 +16,7 @@ public class DynamoDb
         this.client = client;
     }
 
-    public string[] GetWallets(string wallet)
+    public virtual string[] GetWallets(string wallet)
     {
         var user = GetItem(wallet);
         if (user == null) return Array.Empty<string>();
@@ -40,7 +40,7 @@ public class DynamoDb
         return wallets.ToArray();
     }
 
-    public Dictionary<string, AttributeValue>? GetItem(string primaryKey)
+    public virtual Dictionary<string, AttributeValue>? GetItem(string primaryKey)
     {
         var request = new GetItemRequest
         {

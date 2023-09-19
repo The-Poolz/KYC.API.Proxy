@@ -2,6 +2,7 @@ using Moq;
 using Xunit;
 using SecretsManager;
 using Flurl.Http.Testing;
+using KYC.API.Proxy.Utils;
 using Newtonsoft.Json.Linq;
 
 namespace KYC.API.Proxy.Tests;
@@ -13,12 +14,18 @@ public class LambdaFunctionTests
 
     public LambdaFunctionTests()
     {
+        Environment.SetEnvironmentVariable("AWS_REGION", "us-east-2");
+
         var secretManager = new Mock<SecretManager>();
         secretManager.Setup(x => x.GetSecretValue("SecretId", "SecretValue"))
             .Returns("SecretString");
 
+        var dynamoDb = new Mock<DynamoDb>();
+        dynamoDb.Setup(x => x.GetWallets(It.IsAny<string>()))
+            .Returns(Array.Empty<string>());
+
         var settings = new LambdaSettings(secretManager.Object);
-        lambdaFunction = new LambdaFunction(settings);
+        lambdaFunction = new LambdaFunction(settings, dynamoDb.Object);
 
         response = new JObject()
         {
