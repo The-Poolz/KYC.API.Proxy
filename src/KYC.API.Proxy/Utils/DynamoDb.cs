@@ -34,7 +34,7 @@ public class DynamoDb
             var isAssociatedWallet = associatedUser["EvmWallets"].L.Find(x => x.S == wallet);
             if (isAssociatedWallet == null) continue;
 
-            wallets.Add(isAssociatedWallet.S);
+            wallets.Add(associatedUser["EvmWallet"].S);
         }
 
         return wallets.ToArray();
