@@ -31,10 +31,10 @@ public class DynamoDb
             if (associatedUser == null || !associatedUser.ContainsKey("EvmWallets"))
                 continue;
 
-            var isAssociatedWallet = associatedUser["EvmWallets"].L.Find(x => x.S == wallet);
-            if (isAssociatedWallet == null) continue;
-
-            wallets.Add(associatedUser["EvmWallet"].S);
+            if (associatedUser["EvmWallets"].L.Exists(x => x.S == wallet))
+            {
+                wallets.Add(associatedUser["EvmWallet"].S);
+            }
         }
 
         return wallets.ToArray();
