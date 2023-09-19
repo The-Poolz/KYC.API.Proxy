@@ -16,13 +16,13 @@ public class HttpCall
         this.settings = settings;
     }
 
-    public virtual JToken GetBlockPassResponse(string address) =>
+    public virtual JObject GetBlockPassResponse(string address) =>
         $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{address}"
             .AllowHttpStatus("404")
             .WithHeader("Authorization", settings.SecretApiKey)
             .WithHeader("cache-control", "no-cache")
             .GetAsync()
-            .ReceiveJson<JToken>()
+            .ReceiveJson<JObject>()
             .GetAwaiter()
             .GetResult();
 }

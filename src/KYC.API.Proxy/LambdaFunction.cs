@@ -34,7 +34,7 @@ public class LambdaFunction
 
         var response = httpCall.GetBlockPassResponse(address);
 
-        if (response["status"]?.ToString() != "error")
+        if (response.ContainsKey("status") && response["status"]?.ToString() != "error")
         {
             return response;
         }
@@ -43,7 +43,7 @@ public class LambdaFunction
         foreach (var wallet in wallets)
         {
             response = httpCall.GetBlockPassResponse(wallet);
-            if (response["status"]?.ToString() != "error")
+            if (response.ContainsKey("status") && response["status"]?.ToString() != "error")
             {
                 return response;
             }
