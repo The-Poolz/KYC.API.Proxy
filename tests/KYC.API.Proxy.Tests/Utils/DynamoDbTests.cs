@@ -63,14 +63,14 @@ public class DynamoDbTests
     internal void GetWallets_AssociatedUserHasNoEvmWallets()
     {
         var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "wallet" } },
-                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "wallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+        });
         var secondItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "associatedWallet" } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "associatedWallet" } }
+        });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
             .Returns(Task.FromResult(firstItem))
@@ -85,15 +85,15 @@ public class DynamoDbTests
     internal void GetWallets_AssociatedWalletFound()
     {
         var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "wallet" } },
-                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "wallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+        });
         var secondItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "associatedWallet" } },
-                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "wallet" } } } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "associatedWallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "wallet" } } } }
+        });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
             .Returns(Task.FromResult(firstItem))

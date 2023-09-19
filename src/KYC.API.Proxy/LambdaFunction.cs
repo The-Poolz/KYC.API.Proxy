@@ -1,4 +1,3 @@
-using Flurl.Http;
 using Amazon.Lambda.Core;
 using KYC.API.Proxy.Utils;
 using Newtonsoft.Json.Linq;
@@ -9,16 +8,16 @@ namespace KYC.API.Proxy;
 
 public class LambdaFunction
 {
-    private readonly LambdaSettings settings;
+    private readonly HttpCall httpCall;
     private readonly DynamoDb dynamoDb;
 
     public LambdaFunction()
-        : this(new LambdaSettings(), new DynamoDb())
+        : this(new HttpCall(), new DynamoDb())
     { }
 
-    public LambdaFunction(LambdaSettings settings, DynamoDb dynamoDb)
+    public LambdaFunction(HttpCall httpCall, DynamoDb dynamoDb)
     {
-        this.settings = settings;
+        this.httpCall = httpCall;
         this.dynamoDb = dynamoDb;
     }
 
@@ -33,7 +32,7 @@ public class LambdaFunction
         }
         var address = request["Address"]!.ToString();
 
-        var response = GetBlockPassResponse(address);
+        var response = httpCall.GetBlockPassResponse(address);
 
         if (response["status"]?.ToString() != "error")
         {
@@ -43,7 +42,7 @@ public class LambdaFunction
         var wallets = dynamoDb.GetWallets(address);
         foreach (var wallet in wallets)
         {
-            response = GetBlockPassResponse(wallet);
+            response = httpCall.GetBlockPassResponse(wallet);
             if (response["status"]?.ToString() != "error")
             {
                 return response;
@@ -55,14 +54,4 @@ public class LambdaFunction
             new JProperty("status", "error")
         };
     }
-
-    private JToken GetBlockPassResponse(string address) => 
-        $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{address}"
-            .AllowHttpStatus("404")
-            .WithHeader("Authorization", settings.SecretApiKey)
-            .WithHeader("cache-control", "no-cache")
-            .GetAsync()
-            .ReceiveJson<JToken>()
-            .GetAwaiter()
-            .GetResult();
 }
