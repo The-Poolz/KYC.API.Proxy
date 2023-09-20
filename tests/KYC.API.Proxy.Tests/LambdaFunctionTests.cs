@@ -31,7 +31,7 @@ public class LambdaFunctionTests
     {
         var request = new InputData
         {
-            Address = "0x0000000000000000000000000000000000000000"
+            Address = LambdaFunction.ZeroAddress
         };
         var lambdaFunction = MockLambdaFunction();
 

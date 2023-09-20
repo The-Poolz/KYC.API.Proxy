@@ -9,6 +9,7 @@ namespace KYC.API.Proxy;
 
 public class LambdaFunction
 {
+    public const string ZeroAddress = "0x0000000000000000000000000000000000000000";
     private readonly HttpCall httpCall;
     private readonly DynamoDb dynamoDb;
 
@@ -24,7 +25,7 @@ public class LambdaFunction
 
     public OutputData Run(InputData request)
     {
-        if (string.IsNullOrWhiteSpace(request.Address) || request.Address == "0x0000000000000000000000000000000000000000")
+        if (string.IsNullOrWhiteSpace(request.Address) || request.Address == ZeroAddress)
         {
             return new OutputData
             {
