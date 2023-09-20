@@ -54,7 +54,7 @@ public class LambdaFunction
         };
     }
 
-    private OutputData BuildOutputData(JObject response)
+    private static OutputData BuildOutputData(JObject response)
     {
         return new OutputData
         {
