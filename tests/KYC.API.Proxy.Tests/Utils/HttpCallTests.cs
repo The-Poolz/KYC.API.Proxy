@@ -3,7 +3,8 @@ using Xunit;
 using SecretsManager;
 using Flurl.Http.Testing;
 using KYC.API.Proxy.Utils;
-using Newtonsoft.Json.Linq;
+using KYC.API.Proxy.Models;
+using KYC.API.Proxy.Models.HttpResponse;
 
 namespace KYC.API.Proxy.Tests.Utils;
 
@@ -16,10 +17,20 @@ public class HttpCallTests
         secretManager.Setup(x => x.GetSecretValue("SecretId", "SecretValue"))
             .Returns("SecretString");
         var lambdaSettings = new LambdaSettings(secretManager.Object);
-        var response = new JObject
+        var response = new Response
         {
-            { "StatusCode", 200 },
-            { "Body", "Ok" }
+            Status = RequestStatus.success,
+            Data = new Data
+            {
+                Status = "approved",
+                Identities = new Identities
+                {
+                    GivenName = new GivenName
+                    {
+                        Value = "USER NAME"
+                    }
+                }
+            }
         };
         var httpTest = new HttpTest();
         httpTest
@@ -29,6 +40,8 @@ public class HttpCallTests
 
         var result = httpCall.GetBlockPassResponse("address");
 
-        Assert.Equal(response, result);
+        Assert.Equal(response.Status, result.Status);
+        Assert.Equal(response.Data.Status, result.Data.Status);
+        Assert.Equal(response.Data.Identities.GivenName.Value, result.Data.Identities.GivenName.Value);
     }
 }

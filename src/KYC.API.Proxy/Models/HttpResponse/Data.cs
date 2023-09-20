@@ -8,5 +8,5 @@ public class Data
     public string Status { get; set; } = null!;
 
     [JsonProperty("identities")]
-    public Identities Identities { get; set; } = null!;
+    public Identities Identities { get; set; } = new();
 }

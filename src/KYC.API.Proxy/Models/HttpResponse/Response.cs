@@ -10,5 +10,5 @@ public class Response
     public RequestStatus Status { get; set; }
 
     [JsonProperty("data")]
-    public Data Data { get; set; } = null!;
+    public Data Data { get; set; } = new();
 }
