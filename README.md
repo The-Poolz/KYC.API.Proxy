@@ -24,7 +24,7 @@ The lambda function uses the Flurl.Http library to make an HTTP GET request to t
 It authenticates the request using a secret API key retrieved from the AWS SecretsManager.
 The retrieved data is then returned as a JSON token.
 
-## Responses
+## Responses in API4
 
 - User authorized in Blockpass
 
