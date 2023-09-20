@@ -34,18 +34,24 @@ public class LambdaFunction
 
         var response = httpCall.GetBlockPassResponse(address);
 
-        if (response.ContainsKey("status") && response["status"]?.ToString() != "error")
+        if (response.ContainsKey("status"))
         {
-            return response;
+            if (response["status"]?.ToString() != "error")
+            {
+                return response;
+            }
         }
 
         var wallets = dynamoDb.GetWallets(address);
         foreach (var wallet in wallets)
         {
             response = httpCall.GetBlockPassResponse(wallet);
-            if (response.ContainsKey("status") && response["status"]?.ToString() != "error")
+            if (response.ContainsKey("status"))
             {
-                return response;
+                if (response["status"]?.ToString() != "error")
+                {
+                    return response;
+                }
             }
         }
 
