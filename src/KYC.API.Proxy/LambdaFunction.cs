@@ -28,7 +28,7 @@ public class LambdaFunction
         {
             return new OutputData
             {
-                RequestStatus = "error"
+                RequestStatus = RequestStatus.error
             };
         }
         var response = httpCall.GetBlockPassResponse(request.Address);
@@ -50,7 +50,7 @@ public class LambdaFunction
 
         return new OutputData
         {
-            RequestStatus = "error"
+            RequestStatus = RequestStatus.error
         };
     }
 
@@ -58,7 +58,7 @@ public class LambdaFunction
     {
         return new OutputData
         {
-            RequestStatus = response["status"]!.ToString(),
+            RequestStatus = Enum.Parse<RequestStatus>(response["status"]!.ToString()),
             Status = response["data"]?["status"]?.ToString(),
             Name = response["data"]?["identities"]?["given_name"]?["value"]?.ToString()
         };

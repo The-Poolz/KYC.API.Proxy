@@ -37,7 +37,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("error", result.RequestStatus);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("error", result.RequestStatus);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("success", result.RequestStatus);
+        Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("success", result.RequestStatus);
+        Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("error", result.RequestStatus);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal("error", result.RequestStatus);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     private static LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
