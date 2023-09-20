@@ -28,7 +28,7 @@ public class LambdaFunction
         {
             return new OutputData
             {
-                Status = "error"
+                RequestStatus = "error"
             };
         }
         var response = httpCall.GetBlockPassResponse(request.Address);
@@ -50,7 +50,7 @@ public class LambdaFunction
 
         return new OutputData
         {
-            Status = "error"
+            RequestStatus = "error"
         };
     }
 
