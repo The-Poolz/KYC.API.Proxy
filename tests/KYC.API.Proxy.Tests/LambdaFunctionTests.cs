@@ -1,5 +1,6 @@
 using Moq;
 using Xunit;
+using KYC.API.Proxy.Models;
 using KYC.API.Proxy.Utils;
 using Newtonsoft.Json.Linq;
 
@@ -9,10 +10,6 @@ public class LambdaFunctionTests
 {
     private const string TestAddress = "0x0000000000000000000000000000000000000001";
     private const string AssociatedAddress = "0x0000000000000000000000000000000000000002";
-    private readonly JObject response = new()
-    {
-        { "status", "success" }
-    };
 
     public LambdaFunctionTests()
     {
@@ -32,40 +29,40 @@ public class LambdaFunctionTests
     [Fact]
     internal void Run_ShouldReturnForbidden_WhenAddressIsInvalid()
     {
-        var request = new JObject
+        var request = new InputData
         {
-            { "Address", "0x0000000000000000000000000000000000000000" }
+            Address = LambdaFunction.ZeroAddress
         };
         var lambdaFunction = MockLambdaFunction();
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal(403, result["StatusCode"]);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
     internal void Run_ShouldReturnForbidden_WhenAddressIsMissing()
     {
-        var request = new JObject();
+        var request = new InputData();
         var lambdaFunction = MockLambdaFunction();
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal(403, result["StatusCode"]);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
     internal void Run_ShouldReturnExpectedResponse_WhenAddressIsValid()
     {
-        var request = new JObject
+        var request = new InputData
         {
-            { "Address", TestAddress }
+            Address = TestAddress
         };
         var lambdaFunction = MockLambdaFunction();
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal(response, result);
+        Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
@@ -79,18 +76,20 @@ public class LambdaFunctionTests
         mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
             .Returns(new JObject());
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(response);
+            .Returns(new JObject
+            {
+                { "status", "success" }
+            });
 
-        var request = new JObject
+        var request = new InputData
         {
-            { "Address", TestAddress }
+            Address = TestAddress
         };
-
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal(response, result);
+        Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
@@ -106,28 +105,24 @@ public class LambdaFunctionTests
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
             .Returns(new JObject());
 
-        var request = new JObject
+        var request = new InputData
         {
-            { "Address", TestAddress }
+            Address = TestAddress
         };
 
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
         var result = lambdaFunction.Run(request);
 
-        var expected = new JObject
-        {
-            { "status", "error" }
-        };
-        Assert.Equal(expected, result);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
     internal void Run_WhenStatusBeError()
     {
-        var request = new JObject
+        var request = new InputData
         {
-            { "Address", TestAddress }
+            Address = TestAddress
         };
         var errorResponse = new JObject
         {
@@ -146,16 +141,19 @@ public class LambdaFunctionTests
 
         var result = lambdaFunction.Run(request);
 
-        Assert.Equal(errorResponse, result);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
-    private LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
+    private static LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
     {
         if (mockHttpCall == null)
         {
             mockHttpCall = new Mock<HttpCall>();
             mockHttpCall.Setup(x => x.GetBlockPassResponse(It.IsAny<string>()))
-                .Returns(response);
+                .Returns(new JObject
+                {
+                    { "status", "success" }
+                });
         }
 
         mockDynamoDb ??= new Mock<DynamoDb>();

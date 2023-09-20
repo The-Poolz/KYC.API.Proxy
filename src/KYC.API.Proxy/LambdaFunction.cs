@@ -1,5 +1,6 @@
 using Amazon.Lambda.Core;
 using KYC.API.Proxy.Utils;
+using KYC.API.Proxy.Models;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -8,6 +9,7 @@ namespace KYC.API.Proxy;
 
 public class LambdaFunction
 {
+    public const string ZeroAddress = "0x0000000000000000000000000000000000000000";
     private readonly HttpCall httpCall;
     private readonly DynamoDb dynamoDb;
 
@@ -21,37 +23,45 @@ public class LambdaFunction
         this.dynamoDb = dynamoDb;
     }
 
-    public JToken Run(JObject request)
+    public OutputData Run(InputData request)
     {
-        if (!request.ContainsKey("Address") || request["Address"]!.ToString() == "0x0000000000000000000000000000000000000000")
+        if (string.IsNullOrWhiteSpace(request.Address) || request.Address == ZeroAddress)
         {
-            return new JObject
+            return new OutputData
             {
-                { "StatusCode", 403 }
+                RequestStatus = RequestStatus.error
             };
         }
-        var address = request["Address"]!.ToString();
-
-        var response = httpCall.GetBlockPassResponse(address);
+        var response = httpCall.GetBlockPassResponse(request.Address);
 
         if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
         {
-            return response;
+            return BuildOutputData(response);
         }
 
-        var wallets = dynamoDb.GetWallets(address);
+        var wallets = dynamoDb.GetWallets(request.Address);
         foreach (var wallet in wallets)
         {
             response = httpCall.GetBlockPassResponse(wallet);
             if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
             {
-                return response;
+                return BuildOutputData(response);
             }
         }
 
-        return new JObject
+        return new OutputData
         {
-            new JProperty("status", "error")
+            RequestStatus = RequestStatus.error
+        };
+    }
+
+    private static OutputData BuildOutputData(JObject response)
+    {
+        return new OutputData
+        {
+            RequestStatus = Enum.Parse<RequestStatus>(response["status"]!.ToString()),
+            Status = response["data"]?["status"]?.ToString(),
+            Name = response["data"]?["identities"]?["given_name"]?["value"]?.ToString()
         };
     }
 }
