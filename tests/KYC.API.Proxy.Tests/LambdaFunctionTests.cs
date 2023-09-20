@@ -144,7 +144,7 @@ public class LambdaFunctionTests
         Assert.Equal("error", result.RequestStatus);
     }
 
-    private LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
+    private static LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
     {
         if (mockHttpCall == null)
         {
