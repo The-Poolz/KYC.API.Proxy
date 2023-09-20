@@ -1,6 +1,7 @@
 using Moq;
 using Xunit;
 using KYC.API.Proxy.Models;
+using KYC.API.Proxy.Models.HttpResponse;
 using KYC.API.Proxy.Utils;
 using Newtonsoft.Json.Linq;
 
@@ -74,11 +75,11 @@ public class LambdaFunctionTests
 
         var mockHttpCall = new Mock<HttpCall>();
         mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
-            .Returns(new JObject());
+            .Returns(new Response());
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(new JObject
+            .Returns(new Response
             {
-                { "status", "success" }
+                Status = RequestStatus.success
             });
 
         var request = new InputData
@@ -101,9 +102,9 @@ public class LambdaFunctionTests
 
         var mockHttpCall = new Mock<HttpCall>();
         mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
-            .Returns(new JObject());
+            .Returns(new Response());
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(new JObject());
+            .Returns(new Response());
 
         var request = new InputData
         {
@@ -124,9 +125,9 @@ public class LambdaFunctionTests
         {
             Address = TestAddress
         };
-        var errorResponse = new JObject
+        var errorResponse = new Response
         {
-            { "status", "error" }
+            Status = RequestStatus.error
         };
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -150,9 +151,9 @@ public class LambdaFunctionTests
         {
             mockHttpCall = new Mock<HttpCall>();
             mockHttpCall.Setup(x => x.GetBlockPassResponse(It.IsAny<string>()))
-                .Returns(new JObject
+                .Returns(new Response
                 {
-                    { "status", "success" }
+                    Status = RequestStatus.success
                 });
         }
 
