@@ -73,11 +73,11 @@ public class LambdaFunctionTests
 
         var mockHttpCall = new Mock<HttpCall>();
         mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
-            .Returns(new OutputData());
+            .Returns(new JObject());
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(new OutputData
+            .Returns(new JObject
             {
-                Status = "success"
+                { "status", "success" }
             });
 
         var request = new InputData
@@ -101,9 +101,9 @@ public class LambdaFunctionTests
 
         var mockHttpCall = new Mock<HttpCall>();
         mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
-            .Returns(new OutputData());
+            .Returns(new JObject());
         mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(new OutputData());
+            .Returns(new JObject());
 
         var request = new InputData
         {
@@ -124,9 +124,9 @@ public class LambdaFunctionTests
         {
             Address = TestAddress
         };
-        var errorResponse = new OutputData
+        var errorResponse = new JObject
         {
-            Status = "error"
+            { "status", "error" }
         };
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -150,9 +150,9 @@ public class LambdaFunctionTests
         {
             mockHttpCall = new Mock<HttpCall>();
             mockHttpCall.Setup(x => x.GetBlockPassResponse(It.IsAny<string>()))
-                .Returns(new OutputData
+                .Returns(new JObject
                 {
-                    Status = "success"
+                    { "status", "success" }
                 });
         }
 
