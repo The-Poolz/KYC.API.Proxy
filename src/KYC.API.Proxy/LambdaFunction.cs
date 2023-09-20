@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using KYC.API.Proxy.Utils;
 using KYC.API.Proxy.Models;
 using Newtonsoft.Json.Linq;
+using KYC.API.Proxy.Models.HttpResponse;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -34,7 +35,7 @@ public class LambdaFunction
         }
         var response = httpCall.GetBlockPassResponse(request.Address);
 
-        if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
+        if (response.Status != RequestStatus.error)
         {
             return BuildOutputData(response);
         }
@@ -43,7 +44,7 @@ public class LambdaFunction
         foreach (var wallet in wallets)
         {
             response = httpCall.GetBlockPassResponse(wallet);
-            if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
+            if (response.Status != RequestStatus.error)
             {
                 return BuildOutputData(response);
             }
@@ -55,13 +56,13 @@ public class LambdaFunction
         };
     }
 
-    private static OutputData BuildOutputData(JObject response)
+    private static OutputData BuildOutputData(Response response)
     {
         return new OutputData
         {
-            RequestStatus = Enum.Parse<RequestStatus>(response["status"]!.ToString()),
-            Status = response["data"]?["status"]?.ToString(),
-            Name = response["data"]?["identities"]?["given_name"]?["value"]?.ToString()
+            RequestStatus = response.Status,
+            Status = response.Data.Status,
+            Name = response.Data.Identities.GivenName.Value
         };
     }
 }
