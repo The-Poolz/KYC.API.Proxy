@@ -1,6 +1,6 @@
 using Amazon.Lambda.Core;
-using KYC.API.Proxy.Models;
 using KYC.API.Proxy.Utils;
+using KYC.API.Proxy.Models;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]

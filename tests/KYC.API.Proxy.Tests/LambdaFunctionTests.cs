@@ -10,6 +10,7 @@ public class LambdaFunctionTests
 {
     private const string TestAddress = "0x0000000000000000000000000000000000000001";
     private const string AssociatedAddress = "0x0000000000000000000000000000000000000002";
+
     public LambdaFunctionTests()
     {
         Environment.SetEnvironmentVariable("AWS_REGION", "us-east-2");
@@ -84,7 +85,6 @@ public class LambdaFunctionTests
         {
             Address = TestAddress
         };
-
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
         var result = lambdaFunction.Run(request);
@@ -154,6 +154,101 @@ public class LambdaFunctionTests
                 {
                     { "status", "success" }
                 });
+        }
+
+        mockDynamoDb ??= new Mock<DynamoDb>();
+
+        return new LambdaFunction(mockHttpCall.Object, mockDynamoDb.Object);
+    }
+
+    [Fact]
+    internal void Run_ReceiveAddressFromAssociatedWallets()
+    {
+        var mockDynamoDb = new Mock<DynamoDb>();
+        mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
+            .Returns(new[] { AssociatedAddress });
+
+        var mockHttpCall = new Mock<HttpCall>();
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
+            .Returns(new JObject());
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
+            .Returns(response);
+
+        var request = new JObject
+        {
+            { "Address", TestAddress }
+        };
+
+        var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
+
+        var result = lambdaFunction.Run(request);
+
+        Assert.Equal(response, result);
+    }
+
+    [Fact]
+    internal void Run_ReceiveErrorResponse()
+    {
+        var mockDynamoDb = new Mock<DynamoDb>();
+        mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
+            .Returns(new[] { AssociatedAddress });
+
+        var mockHttpCall = new Mock<HttpCall>();
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
+            .Returns(new JObject());
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
+            .Returns(new JObject());
+
+        var request = new JObject
+        {
+            { "Address", TestAddress }
+        };
+
+        var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
+
+        var result = lambdaFunction.Run(request);
+
+        var expected = new JObject
+        {
+            { "status", "error" }
+        };
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    internal void Run_WhenStatusBeError()
+    {
+        var request = new JObject
+        {
+            { "Address", TestAddress }
+        };
+        var errorResponse = new JObject
+        {
+            { "status", "error" }
+        };
+        var mockDynamoDb = new Mock<DynamoDb>();
+        mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
+            .Returns(new[] { AssociatedAddress });
+
+        var mockHttpCall = new Mock<HttpCall>();
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
+            .Returns(errorResponse);
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
+            .Returns(errorResponse);
+        var lambdaFunction = MockLambdaFunction(mockHttpCall);
+
+        var result = lambdaFunction.Run(request);
+
+        Assert.Equal(errorResponse, result);
+    }
+
+    private LambdaFunction MockLambdaFunction(Mock<HttpCall>? mockHttpCall = null, Mock<DynamoDb>? mockDynamoDb = null)
+    {
+        if (mockHttpCall == null)
+        {
+            mockHttpCall = new Mock<HttpCall>();
+            mockHttpCall.Setup(x => x.GetBlockPassResponse(It.IsAny<string>()))
+                .Returns(response);
         }
 
         mockDynamoDb ??= new Mock<DynamoDb>();
