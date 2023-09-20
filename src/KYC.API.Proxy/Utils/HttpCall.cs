@@ -1,5 +1,5 @@
 ﻿using Flurl.Http;
-using Newtonsoft.Json.Linq;
+using KYC.API.Proxy.Models;
 
 namespace KYC.API.Proxy.Utils;
 
@@ -16,13 +16,13 @@ public class HttpCall
         this.settings = settings;
     }
 
-    public virtual JObject GetBlockPassResponse(string address) =>
+    public virtual OutputData GetBlockPassResponse(string address) =>
         $"https://kyc.blockpass.org/kyc/1.0/connect/{LambdaSettings.ClientId}/refId/{address}"
             .AllowHttpStatus("404")
             .WithHeader("Authorization", settings.SecretApiKey)
             .WithHeader("cache-control", "no-cache")
             .GetAsync()
-            .ReceiveJson<JObject>()
+            .ReceiveJson<OutputData>()
             .GetAwaiter()
             .GetResult();
 }

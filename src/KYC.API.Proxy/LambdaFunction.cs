@@ -1,7 +1,6 @@
 using Amazon.Lambda.Core;
-using KYC.API.Proxy.Models;
 using KYC.API.Proxy.Utils;
-using Newtonsoft.Json.Linq;
+using KYC.API.Proxy.Models;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -33,34 +32,24 @@ public class LambdaFunction
         }
         var response = httpCall.GetBlockPassResponse(request.Address);
 
-        if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
+        if (response.RequestStatus != "error")
         {
-            return BuildOutputData(response);
+            return response;
         }
 
         var wallets = dynamoDb.GetWallets(request.Address);
         foreach (var wallet in wallets)
         {
             response = httpCall.GetBlockPassResponse(wallet);
-            if (response.ContainsKey("status") && response["status"]!.ToString() != "error")
+            if (response.RequestStatus != "error")
             {
-                return BuildOutputData(response);
+                return response;
             }
         }
 
         return new OutputData
         {
             RequestStatus = "error"
-        };
-    }
-
-    private static OutputData BuildOutputData(JObject response)
-    {
-        return new OutputData
-        {
-            RequestStatus = response["status"]!.ToString(),
-            Status = response["data"]?["status"]?.ToString(),
-            Name = response["data"]?["identities"]?["given_name"]?["value"]?.ToString()
         };
     }
 }
