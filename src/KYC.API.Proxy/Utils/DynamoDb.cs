@@ -42,6 +42,8 @@ public class DynamoDb
         return user.TryGetValue("Proxy", out var proxy) ? proxy.S : null;
     }
 
+    public void UpdateItem(string primaryKey, string proxyAddress) => UpdateItemAsync(primaryKey, proxyAddress).GetAwaiter().GetResult();
+
     public virtual async Task UpdateItemAsync(string primaryKey, string proxyAddress)
     {
         var request = new UpdateItemRequest

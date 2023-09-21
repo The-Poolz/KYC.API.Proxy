@@ -7,11 +7,12 @@ namespace KYC.API.Proxy.Models;
 public class OutputData
 {
     internal OutputData() { }
-    public OutputData(Response response)
+    public OutputData(Response response, string? proxy = null)
     {
         RequestStatus = response.Status;
         Status = response.Data.Status;
         Name = response.Data.Identities.GivenName.Value;
+        Proxy = proxy;
     }
     [JsonConverter(typeof(StringEnumConverter))]
     public RequestStatus RequestStatus { get; set; }

@@ -25,7 +25,7 @@ public class LambdaFunctionTests
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsInvalid()
+    internal void RunAsync_ShouldReturnForbidden_WhenAddressIsInvalid()
     {
         var request = new InputData
         {
@@ -33,24 +33,24 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsMissing()
+    internal void RunAsync_ShouldReturnForbidden_WhenAddressIsMissing()
     {
         var request = new InputData();
         var lambdaFunction = MockLambdaFunction();
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_ShouldReturnExpectedResponse_WhenAddressIsValid()
+    internal void RunAsync_ShouldReturnExpectedResponse_WhenAddressIsValid()
     {
         var request = new InputData
         {
@@ -58,13 +58,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_ReceiveAddressFromProxyAddress()
+    internal void RunAsync_ReceiveAddressFromProxyAddress()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetProxyAddress(TestAddress))
@@ -85,13 +85,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_BadResponseInProxyAddress()
+    internal void RunAsync_BadResponseInProxyAddress()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetProxyAddress(TestAddress))
@@ -112,13 +112,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_ReceiveAddressFromAssociatedWallets()
+    internal void RunAsync_ReceiveAddressFromAssociatedWallets()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -139,13 +139,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
-    internal async Task RunAsync_ReceiveErrorResponse()
+    internal void RunAsync_ReceiveErrorResponse()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -164,7 +164,7 @@ public class LambdaFunctionTests
 
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = await lambdaFunction.RunAsync(request);
+        var result = lambdaFunction.Run(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
