@@ -24,6 +24,9 @@ public class DynamoDb
         if (user == null || !user.ContainsKey("EvmWallets"))
             return Array.Empty<string>();
 
+        if (user.TryGetValue("Proxy", out var proxy))
+            return new[] { proxy.S };
+
         var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
 
         var wallets = new List<string>();
