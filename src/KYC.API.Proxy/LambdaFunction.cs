@@ -43,7 +43,7 @@ public class LambdaFunction
         var proxy = dynamoDb.GetProxyAddress(request.Address);
         if (proxy != null)
         {
-            response = httpCall.GetBlockPassResponse(request.Address);
+            response = httpCall.GetBlockPassResponse(proxy);
 
             if (response.Status != RequestStatus.error)
             {

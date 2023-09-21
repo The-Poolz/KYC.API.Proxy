@@ -64,6 +64,33 @@ public class LambdaFunctionTests
     }
 
     [Fact]
+    internal async Task RunAsync_ReceiveAddressFromProxyAddress()
+    {
+        var mockDynamoDb = new Mock<DynamoDb>();
+        mockDynamoDb.Setup(x => x.GetProxyAddress(TestAddress))
+            .Returns(AssociatedAddress);
+
+        var mockHttpCall = new Mock<HttpCall>();
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
+            .Returns(new Response());
+        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
+            .Returns(new Response
+            {
+                Status = RequestStatus.success
+            });
+
+        var request = new InputData
+        {
+            Address = TestAddress
+        };
+        var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
+
+        var result = await lambdaFunction.RunAsync(request);
+
+        Assert.Equal(RequestStatus.success, result.RequestStatus);
+    }
+
+    [Fact]
     internal async Task RunAsync_ReceiveAddressFromAssociatedWallets()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
