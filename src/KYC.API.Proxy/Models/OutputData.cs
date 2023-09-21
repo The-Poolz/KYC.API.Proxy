@@ -6,7 +6,7 @@ namespace KYC.API.Proxy.Models;
 
 public class OutputData
 {
-    public OutputData() { }
+    internal OutputData() { }
     public OutputData(Response response)
     {
         RequestStatus = response.Status;
