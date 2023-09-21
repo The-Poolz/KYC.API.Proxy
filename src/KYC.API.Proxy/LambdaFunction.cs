@@ -57,7 +57,10 @@ public class LambdaFunction
             response = httpCall.GetBlockPassResponse(wallet);
             if (response.Status != RequestStatus.error)
             {
-                await dynamoDb.UpdateItemAsync(request.Address, wallet);
+                if (proxy != wallet)
+                {
+                    await dynamoDb.UpdateItemAsync(request.Address, wallet);
+                }
                 return BuildOutputData(response, wallet);
             }
         }
