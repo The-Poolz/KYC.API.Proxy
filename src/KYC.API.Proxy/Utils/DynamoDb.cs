@@ -16,7 +16,7 @@ public class DynamoDb
         this.client = client;
     }
 
-    public virtual string[] GetWallets(string wallet)
+    public virtual IEnumerable<string> GetWallets(string wallet)
     {
         var user = GetItem(wallet);
         if (user == null || !user.ContainsKey("EvmWallets"))
@@ -28,8 +28,7 @@ public class DynamoDb
             .Select(associatedWallet => GetItem(associatedWallet))
             .Where(associatedUser => associatedUser != null && associatedUser.ContainsKey("EvmWallets"))
             .Where(associatedUser => associatedUser!["EvmWallets"].L.Exists(x => x.S == wallet))
-            .Select(associatedUser => associatedUser!["EvmWallet"].S)
-            .ToArray();
+            .Select(associatedUser => associatedUser!["EvmWallet"].S);
     }
 
     public virtual Dictionary<string, AttributeValue>? GetItem(string primaryKey)
