@@ -60,6 +60,24 @@ public class DynamoDbTests
     }
 
     [Fact]
+    internal void GetWallets_FoundProxyAddress()
+    {
+        var user = CreateGetItemResponse(new Dictionary<string, AttributeValue>
+        {
+            { "EvmWallet", new AttributeValue { S = "wallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } },
+            { "Proxy", new AttributeValue { S = "associatedWallet" } }
+        });
+
+        client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
+            .Returns(Task.FromResult(user));
+
+        var result = dynamoDb.GetWallets("wallet");
+
+        result.Should().BeEquivalentTo("associatedWallet");
+    }
+
+    [Fact]
     internal void GetWallets_AssociatedUserHasNoEvmWallets()
     {
         var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
