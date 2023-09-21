@@ -17,6 +17,7 @@ public class OutputData
     public RequestStatus RequestStatus { get; set; }
     public string? Status { get; set; }
     public string? Name { get; set; }
+    public string? Proxy { get; set; }
     public static OutputData Error => new()
     {
         RequestStatus = RequestStatus.error

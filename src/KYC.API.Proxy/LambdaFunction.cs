@@ -21,7 +21,7 @@ public class LambdaFunction
         this.dynamoDb = dynamoDb;
     }
 
-    public OutputData Run(InputData request)
+    public async Task<OutputData> RunAsync(InputData request)
     {
         if (!request.Valid)
         {
@@ -34,11 +34,45 @@ public class LambdaFunction
             return new(response);
         }
 
-        var wallets = dynamoDb.GetWallets(request.Address);
-        var validResponse = wallets
-            .Select(wallet => httpCall.GetBlockPassResponse(wallet))
-            .FirstOrDefault(_response => _response.Status != RequestStatus.error);
+        var proxy = dynamoDb.GetProxyAddress(request.Address);
+        if (proxy != null)
+        {
+            response = httpCall.GetBlockPassResponse(proxy);
 
-        return validResponse == null? OutputData.Error : new(validResponse);
+            if (response.Status != RequestStatus.error)
+            {
+                return BuildOutputData(response, proxy);
+            }
+        }
+
+        var wallets = dynamoDb.GetWallets(request.Address);
+        foreach (var wallet in wallets)
+        {
+            response = httpCall.GetBlockPassResponse(wallet);
+            if (response.Status != RequestStatus.error)
+            {
+                if (proxy != wallet)
+                {
+                    await dynamoDb.UpdateItemAsync(request.Address, wallet);
+                }
+                return BuildOutputData(response, wallet);
+            }
+        }
+
+        return new OutputData
+        {
+            RequestStatus = RequestStatus.error
+        };
+    }
+
+    private static OutputData BuildOutputData(Response response, string? proxy = null)
+    {
+        return new OutputData
+        {
+            RequestStatus = response.Status,
+            Status = response.Data.Status,
+            Name = response.Data.Identities.GivenName.Value,
+            Proxy = proxy
+        };
     }
 }

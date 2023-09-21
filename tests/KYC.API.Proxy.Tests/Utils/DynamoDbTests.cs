@@ -45,10 +45,10 @@ public class DynamoDbTests
     internal void GetWallets_AssociatedUserNotFound()
     {
         var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "wallet" } },
-                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "wallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+        });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
             .Returns(Task.FromResult(firstItem))
@@ -102,6 +102,57 @@ public class DynamoDbTests
         var result = dynamoDb.GetWallets("wallet");
 
         result.Should().BeEquivalentTo("associatedWallet");
+    }
+
+    [Fact]
+    internal async Task UpdateItem()
+    {
+        client.Setup(x => x.UpdateItemAsync(It.IsAny<UpdateItemRequest>(), default))
+            .ReturnsAsync(new UpdateItemResponse());
+
+        var testCode = new Func<Task>(async () => await dynamoDb.UpdateItemAsync("wallet", "associatedWallet"));
+
+        await testCode.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    internal void GetProxyAddress_UserNotFound()
+    {
+        client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
+            .ReturnsAsync(new GetItemResponse());
+
+        var result = dynamoDb.GetProxyAddress("wallet");
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    internal void GetProxyAddress_ProxyAddressForUserNotFound()
+    {
+        client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
+            .ReturnsAsync(CreateGetItemResponse(new Dictionary<string, AttributeValue>
+            {
+                { "EvmWallet", new AttributeValue { S = "wallet" } }
+            }));
+
+        var result = dynamoDb.GetProxyAddress("wallet");
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    internal void GetProxyAddress_ReceiveProxyAddress()
+    {
+        client.Setup(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
+            .ReturnsAsync(CreateGetItemResponse(new Dictionary<string, AttributeValue>
+            {
+                { "EvmWallet", new AttributeValue { S = "wallet" } },
+                { "Proxy", new AttributeValue { S = "proxy wallet" } }
+            }));
+
+        var result = dynamoDb.GetProxyAddress("wallet");
+
+        result.Should().BeEquivalentTo("proxy wallet");
     }
 
     private static GetItemResponse CreateGetItemResponse(Dictionary<string, AttributeValue> item) => new() { Item = item };
