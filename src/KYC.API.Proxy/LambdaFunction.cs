@@ -10,6 +10,7 @@ namespace KYC.API.Proxy;
 public class LambdaFunction
 {
     public const string ZeroAddress = "0x0000000000000000000000000000000000000000";
+
     private readonly HttpCall httpCall;
     private readonly DynamoDb dynamoDb;
 
@@ -23,7 +24,7 @@ public class LambdaFunction
         this.dynamoDb = dynamoDb;
     }
 
-    public OutputData Run(InputData request)
+    public async Task<OutputData> RunAsync(InputData request)
     {
         if (string.IsNullOrWhiteSpace(request.Address) || request.Address == ZeroAddress)
         {
@@ -45,6 +46,7 @@ public class LambdaFunction
             response = httpCall.GetBlockPassResponse(wallet);
             if (response.Status != RequestStatus.error)
             {
+                await dynamoDb.UpdateItem(request.Address, wallet);
                 return BuildOutputData(response);
             }
         }
