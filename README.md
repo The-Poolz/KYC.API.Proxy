@@ -53,3 +53,33 @@ The retrieved data is then returned as a JSON token.
     }
 }
 ```
+
+- Proxy response (via linked address)
+
+```json
+{
+    "data": {
+        "myProxyKYC": {
+            "RequestStatus": "success",
+            "Status": "approved",
+            "Name": "NAME OF USER"
+            "Proxy": "0xlinked address"
+        }
+    }
+}
+```
+
+- Other Status
+
+ ```json
+{
+    "data": {
+        "myProxyKYC": {
+            "RequestStatus": "success",
+            "Status": "not finish",
+            "Name": null
+            "Proxy": "0xlinked address"
+        }
+    }
+}
+```
