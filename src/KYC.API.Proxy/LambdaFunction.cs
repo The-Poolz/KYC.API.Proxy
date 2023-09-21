@@ -1,84 +1,41 @@
 using Amazon.Lambda.Core;
 using KYC.API.Proxy.Utils;
 using KYC.API.Proxy.Models;
-using KYC.API.Proxy.Models.HttpResponse;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace KYC.API.Proxy;
-
-public class LambdaFunction
+namespace KYC.API.Proxy
 {
-    public const string ZeroAddress = "0x0000000000000000000000000000000000000000";
-
-    private readonly HttpCall httpCall;
-    private readonly DynamoDb dynamoDb;
-
-    public LambdaFunction()
-        : this(new HttpCall(), new DynamoDb())
-    { }
-
-    public LambdaFunction(HttpCall httpCall, DynamoDb dynamoDb)
+    public class LambdaFunction : LambdaFunctionScenarios
     {
-        this.httpCall = httpCall;
-        this.dynamoDb = dynamoDb;
-    }
+        public LambdaFunction()
+            : this(new HttpCall(), new DynamoDb())
+        { }
 
-    public async Task<OutputData> RunAsync(InputData request)
-    {
-        if (string.IsNullOrWhiteSpace(request.Address) || request.Address == ZeroAddress)
+        public LambdaFunction(HttpCall httpCall, DynamoDb dynamoDb)
+            : base(httpCall, dynamoDb)
+        { }
+
+        public OutputData Run(InputData request)
         {
-            return new OutputData
+            if (!request.Valid)
+                return OutputData.Error;
+
+            var scenarios = new List<Func<InputData, OutputData?>>
             {
-                RequestStatus = RequestStatus.error
+                HandleBlockPassResponse,
+                HandleProxyAddress,
+                HandleValidWallet
             };
-        }
-        var response = httpCall.GetBlockPassResponse(request.Address);
 
-        if (response.Status != RequestStatus.error)
-        {
-            return BuildOutputData(response);
-        }
-
-        var proxy = dynamoDb.GetProxyAddress(request.Address);
-        if (proxy != null)
-        {
-            response = httpCall.GetBlockPassResponse(proxy);
-
-            if (response.Status != RequestStatus.error)
+            foreach (var scenario in scenarios)
             {
-                return BuildOutputData(response, proxy);
+                var result = scenario(request);
+                if (result != null)
+                    return result;
             }
+
+            return OutputData.Error;
         }
-
-        var wallets = dynamoDb.GetWallets(request.Address);
-        foreach (var wallet in wallets)
-        {
-            response = httpCall.GetBlockPassResponse(wallet);
-            if (response.Status != RequestStatus.error)
-            {
-                if (proxy != wallet)
-                {
-                    await dynamoDb.UpdateItemAsync(request.Address, wallet);
-                }
-                return BuildOutputData(response, wallet);
-            }
-        }
-
-        return new OutputData
-        {
-            RequestStatus = RequestStatus.error
-        };
-    }
-
-    private static OutputData BuildOutputData(Response response, string? proxy = null)
-    {
-        return new OutputData
-        {
-            RequestStatus = response.Status,
-            Status = response.Data.Status,
-            Name = response.Data.Identities.GivenName.Value,
-            Proxy = proxy
-        };
     }
 }

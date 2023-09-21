@@ -18,7 +18,7 @@ public class DynamoDb
         this.client = client;
     }
 
-    public virtual string[] GetWallets(string wallet)
+    public virtual IEnumerable<string> GetWallets(string wallet)
     {
         var user = GetItem(wallet);
         if (user == null || !user.ContainsKey("EvmWallets"))
@@ -26,20 +26,11 @@ public class DynamoDb
 
         var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
 
-        var wallets = new List<string>();
-        foreach (var associatedWallet in associatedWallets)
-        {
-            var associatedUser = GetItem(associatedWallet);
-            if (associatedUser == null || !associatedUser.ContainsKey("EvmWallets"))
-                continue;
-
-            if (associatedUser["EvmWallets"].L.Exists(x => x.S == wallet))
-            {
-                wallets.Add(associatedUser["EvmWallet"].S);
-            }
-        }
-
-        return wallets.ToArray();
+        return associatedWallets
+            .Select(associatedWallet => GetItem(associatedWallet))
+            .Where(associatedUser => associatedUser != null && associatedUser.ContainsKey("EvmWallets"))
+            .Where(associatedUser => associatedUser!["EvmWallets"].L.Exists(x => x.S == wallet))
+            .Select(associatedUser => associatedUser!["EvmWallet"].S);
     }
 
     public virtual string? GetProxyAddress(string wallet)
@@ -50,6 +41,8 @@ public class DynamoDb
 
         return user.TryGetValue("Proxy", out var proxy) ? proxy.S : null;
     }
+
+    public void UpdateItem(string primaryKey, string proxyAddress) => UpdateItemAsync(primaryKey, proxyAddress).GetAwaiter().GetResult();
 
     public virtual async Task UpdateItemAsync(string primaryKey, string proxyAddress)
     {
