@@ -24,9 +24,6 @@ public class DynamoDb
         if (user == null || !user.ContainsKey("EvmWallets"))
             return Array.Empty<string>();
 
-        if (user.TryGetValue("Proxy", out var proxy))
-            return new[] { proxy.S };
-
         var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
 
         var wallets = new List<string>();
@@ -43,6 +40,15 @@ public class DynamoDb
         }
 
         return wallets.ToArray();
+    }
+
+    public virtual string? GetProxyAddress(string wallet)
+    {
+        var user = GetItem(wallet);
+        if (user == null)
+            return null;
+
+        return user.TryGetValue("Proxy", out var proxy) ? proxy.S : null;
     }
 
     public virtual async Task UpdateItemAsync(string primaryKey, string proxyAddress)

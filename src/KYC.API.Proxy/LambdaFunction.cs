@@ -40,6 +40,17 @@ public class LambdaFunction
             return BuildOutputData(response);
         }
 
+        var proxy = dynamoDb.GetProxyAddress(request.Address);
+        if (proxy != null)
+        {
+            response = httpCall.GetBlockPassResponse(request.Address);
+
+            if (response.Status != RequestStatus.error)
+            {
+                return BuildOutputData(response, proxy);
+            }
+        }
+
         var wallets = dynamoDb.GetWallets(request.Address);
         foreach (var wallet in wallets)
         {
