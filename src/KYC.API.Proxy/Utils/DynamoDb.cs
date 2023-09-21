@@ -24,20 +24,12 @@ public class DynamoDb
 
         var associatedWallets = user["EvmWallets"].L.Select(x => x.S).ToArray();
 
-        var wallets = new List<string>();
-        foreach (var associatedWallet in associatedWallets)
-        {
-            var associatedUser = GetItem(associatedWallet);
-            if (associatedUser == null || !associatedUser.ContainsKey("EvmWallets"))
-                continue;
-
-            if (associatedUser["EvmWallets"].L.Exists(x => x.S == wallet))
-            {
-                wallets.Add(associatedUser["EvmWallet"].S);
-            }
-        }
-
-        return wallets.ToArray();
+        return associatedWallets
+            .Select(associatedWallet => GetItem(associatedWallet))
+            .Where(associatedUser => associatedUser != null && associatedUser.ContainsKey("EvmWallets"))
+            .Where(associatedUser => associatedUser!["EvmWallets"].L.Exists(x => x.S == wallet))
+            .Select(associatedUser => associatedUser!["EvmWallet"].S)
+            .ToArray();
     }
 
     public virtual Dictionary<string, AttributeValue>? GetItem(string primaryKey)
