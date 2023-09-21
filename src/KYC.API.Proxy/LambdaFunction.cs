@@ -47,7 +47,7 @@ public class LambdaFunction
             if (response.Status != RequestStatus.error)
             {
                 await dynamoDb.UpdateItemAsync(request.Address, wallet);
-                return BuildOutputData(response);
+                return BuildOutputData(response, wallet);
             }
         }
 
@@ -57,13 +57,14 @@ public class LambdaFunction
         };
     }
 
-    private static OutputData BuildOutputData(Response response)
+    private static OutputData BuildOutputData(Response response, string? proxy = null)
     {
         return new OutputData
         {
             RequestStatus = response.Status,
             Status = response.Data.Status,
-            Name = response.Data.Identities.GivenName.Value
+            Name = response.Data.Identities.GivenName.Value,
+            Proxy = proxy
         };
     }
 }

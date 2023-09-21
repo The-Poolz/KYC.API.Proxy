@@ -1,9 +1,8 @@
 using Moq;
 using Xunit;
+using KYC.API.Proxy.Utils;
 using KYC.API.Proxy.Models;
 using KYC.API.Proxy.Models.HttpResponse;
-using KYC.API.Proxy.Utils;
-using Newtonsoft.Json.Linq;
 
 namespace KYC.API.Proxy.Tests;
 
