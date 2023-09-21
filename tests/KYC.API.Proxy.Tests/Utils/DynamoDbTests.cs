@@ -104,5 +104,16 @@ public class DynamoDbTests
         result.Should().BeEquivalentTo("associatedWallet");
     }
 
+    [Fact]
+    internal async Task UpdateItem()
+    {
+        client.Setup(x => x.UpdateItemAsync(It.IsAny<UpdateItemRequest>(), default))
+            .ReturnsAsync(new UpdateItemResponse());
+
+        var testCode = new Func<Task>(async () => await dynamoDb.UpdateItemAsync("wallet", "associatedWallet"));
+
+        await testCode.Should().NotThrowAsync();
+    }
+
     private static GetItemResponse CreateGetItemResponse(Dictionary<string, AttributeValue> item) => new() { Item = item };
 }

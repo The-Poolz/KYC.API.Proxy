@@ -28,7 +28,7 @@ public class LambdaFunctionTests
     }
 
     [Fact]
-    internal void Run_ShouldReturnForbidden_WhenAddressIsInvalid()
+    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsInvalid()
     {
         var request = new InputData
         {
@@ -36,24 +36,24 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal void Run_ShouldReturnForbidden_WhenAddressIsMissing()
+    internal async Task RunAsync_ShouldReturnForbidden_WhenAddressIsMissing()
     {
         var request = new InputData();
         var lambdaFunction = MockLambdaFunction();
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal void Run_ShouldReturnExpectedResponse_WhenAddressIsValid()
+    internal async Task RunAsync_ShouldReturnExpectedResponse_WhenAddressIsValid()
     {
         var request = new InputData
         {
@@ -61,13 +61,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
-    internal void Run_ReceiveAddressFromAssociatedWallets()
+    internal async Task RunAsync_ReceiveAddressFromAssociatedWallets()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -88,13 +88,13 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.success, result.RequestStatus);
     }
 
     [Fact]
-    internal void Run_ReceiveErrorResponse()
+    internal async Task RunAsync_ReceiveErrorResponse()
     {
         var mockDynamoDb = new Mock<DynamoDb>();
         mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
@@ -113,13 +113,13 @@ public class LambdaFunctionTests
 
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
-    internal void Run_WhenStatusBeError()
+    internal async Task RunAsync_WhenStatusBeError()
     {
         var request = new InputData
         {
@@ -140,7 +140,7 @@ public class LambdaFunctionTests
             .Returns(errorResponse);
         var lambdaFunction = MockLambdaFunction(mockHttpCall);
 
-        var result = lambdaFunction.Run(request);
+        var result = await lambdaFunction.RunAsync(request);
 
         Assert.Equal(RequestStatus.error, result.RequestStatus);
     }

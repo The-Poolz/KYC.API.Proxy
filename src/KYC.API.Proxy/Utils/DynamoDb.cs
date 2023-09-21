@@ -42,7 +42,7 @@ public class DynamoDb
         return wallets.ToArray();
     }
 
-    public virtual async Task UpdateItem(string primaryKey, string proxyAddress)
+    public virtual async Task UpdateItemAsync(string primaryKey, string proxyAddress)
     {
         var request = new UpdateItemRequest
         {
