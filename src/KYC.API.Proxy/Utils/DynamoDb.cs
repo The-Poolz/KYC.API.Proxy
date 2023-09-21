@@ -5,6 +5,8 @@ namespace KYC.API.Proxy.Utils;
 
 public class DynamoDb
 {
+    public const string TableName = "UserData";
+
     private readonly IAmazonDynamoDB client;
 
     public DynamoDb()
@@ -40,11 +42,44 @@ public class DynamoDb
         return wallets.ToArray();
     }
 
+    public virtual string? GetProxyAddress(string wallet)
+    {
+        var user = GetItem(wallet);
+        if (user == null)
+            return null;
+
+        return user.TryGetValue("Proxy", out var proxy) ? proxy.S : null;
+    }
+
+    public virtual async Task UpdateItemAsync(string primaryKey, string proxyAddress)
+    {
+        var request = new UpdateItemRequest
+        {
+            TableName = TableName,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                { "EvmWallet", new AttributeValue { S = primaryKey } }
+            },
+            AttributeUpdates = new Dictionary<string, AttributeValueUpdate>
+            {
+                {
+                    "Proxy", new AttributeValueUpdate
+                    {
+                        Value = new AttributeValue { S = proxyAddress },
+                        Action = AttributeAction.PUT
+                    }
+                }
+            }
+        };
+
+        await client.UpdateItemAsync(request);
+    }
+
     public virtual Dictionary<string, AttributeValue>? GetItem(string primaryKey)
     {
         var request = new GetItemRequest
         {
-            TableName = "UserData",
+            TableName = TableName,
             Key = new Dictionary<string, AttributeValue>
             {
                 { "EvmWallet", new AttributeValue { S = primaryKey } }
