@@ -45,10 +45,10 @@ public class DynamoDbTests
     internal void GetWallets_AssociatedUserNotFound()
     {
         var firstItem = CreateGetItemResponse(new Dictionary<string, AttributeValue>
-            {
-                { "EvmWallet", new AttributeValue { S = "wallet" } },
-                { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
-            });
+        {
+            { "EvmWallet", new AttributeValue { S = "wallet" } },
+            { "EvmWallets", new AttributeValue { L = new List<AttributeValue> { new() { S = "associatedWallet" } } } }
+        });
 
         client.SetupSequence(x => x.GetItemAsync(It.IsAny<GetItemRequest>(), default))
             .Returns(Task.FromResult(firstItem))

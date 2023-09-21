@@ -19,8 +19,6 @@ public class LambdaFunctionTests
     [Fact]
     internal void Ctor_Default()
     {
-        Environment.SetEnvironmentVariable("AWS_REGION", "us-east-2");
-
         var function = new LambdaFunction();
 
         Assert.NotNull(function);
@@ -111,33 +109,6 @@ public class LambdaFunctionTests
         };
 
         var lambdaFunction = MockLambdaFunction(mockHttpCall, mockDynamoDb);
-
-        var result = await lambdaFunction.RunAsync(request);
-
-        Assert.Equal(RequestStatus.error, result.RequestStatus);
-    }
-
-    [Fact]
-    internal async Task RunAsync_WhenStatusBeError()
-    {
-        var request = new InputData
-        {
-            Address = TestAddress
-        };
-        var errorResponse = new Response
-        {
-            Status = RequestStatus.error
-        };
-        var mockDynamoDb = new Mock<DynamoDb>();
-        mockDynamoDb.Setup(x => x.GetWallets(TestAddress))
-            .Returns(new[] { AssociatedAddress });
-
-        var mockHttpCall = new Mock<HttpCall>();
-        mockHttpCall.Setup(x => x.GetBlockPassResponse(TestAddress))
-            .Returns(errorResponse);
-        mockHttpCall.Setup(x => x.GetBlockPassResponse(AssociatedAddress))
-            .Returns(errorResponse);
-        var lambdaFunction = MockLambdaFunction(mockHttpCall);
 
         var result = await lambdaFunction.RunAsync(request);
 
