@@ -13,6 +13,8 @@ public class HttpCallTests
     [Fact]
     internal void GetBlockPassResponse()
     {
+        Environment.SetEnvironmentVariable("BLOCKPASS_URI", "https://kyc.blockpass.org/kyc/1.0/connect/[ClientId]/refId/[UserAddress]");
+        Environment.SetEnvironmentVariable("CLIENT_ID", "ClientId");
         var secretManager = new Mock<SecretManager>();
         secretManager.Setup(x => x.GetSecretValue("SecretId", "SecretValue"))
             .Returns("SecretString");

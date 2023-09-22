@@ -28,7 +28,7 @@ public class HttpCall
     {
         var valueResolvers = new Dictionary<string, IValueResolver>
         {
-            ["ClientId"] = new ClientIdResolver(),
+            ["ClientId"] = new ClientIdResolver(settings),
             ["UserAddress"] = new AddressResolver()
         };
         var parser = new URLParser(valueResolvers);
