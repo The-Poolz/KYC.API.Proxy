@@ -1,15 +1,10 @@
-﻿using UrlFiller;
-using Flurl.Http;
-using EnvironmentManager;
-using UrlFiller.Resolver;
-using KYC.API.Proxy.Utils.Resolvers;
+﻿using Flurl.Http;
 using KYC.API.Proxy.Models.HttpResponse;
 
 namespace KYC.API.Proxy.Utils;
 
 public class HttpCall
 {
-    private readonly string blockpassUri;
     private readonly LambdaSettings settings;
 
     public HttpCall()
@@ -18,29 +13,16 @@ public class HttpCall
 
     public HttpCall(LambdaSettings settings)
     {
-        var envManager = new EnvManager();
-
-        blockpassUri = envManager.GetEnvironmentValue<string>("BLOCKPASS_URI");
         this.settings = settings;
     }
 
-    public virtual Response GetBlockPassResponse(string address)
-    {
-        var valueResolvers = new Dictionary<string, IValueResolver>
-        {
-            ["ClientId"] = new ClientIdResolver(settings),
-            ["UserAddress"] = new AddressResolver(address)
-        };
-        var parser = new URLParser(valueResolvers);
-        var url = parser.ParseUrl(blockpassUri);
-
-        return url
+    public virtual Response GetBlockPassResponse(string address) =>
+             settings.Url(address)
             .AllowHttpStatus("404")
             .WithHeader("Authorization", settings.SecretApiKey)
             .WithHeader("cache-control", "no-cache")
             .GetAsync()
             .ReceiveJson<Response>()
             .GetAwaiter()
-            .GetResult();
-    }
+            .GetResult();  
 }
