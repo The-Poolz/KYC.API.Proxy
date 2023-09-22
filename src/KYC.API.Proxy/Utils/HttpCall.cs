@@ -29,7 +29,7 @@ public class HttpCall
         var valueResolvers = new Dictionary<string, IValueResolver>
         {
             ["ClientId"] = new ClientIdResolver(settings),
-            ["UserAddress"] = new AddressResolver()
+            ["UserAddress"] = new AddressResolver(address)
         };
         var parser = new URLParser(valueResolvers);
         var url = parser.ParseUrl(blockpassUri);
