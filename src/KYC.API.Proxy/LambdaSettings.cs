@@ -42,8 +42,11 @@ public class LambdaSettings : IValueResolver
 
     public string GetValue(string input)
     {
-        if (input == ClientIdKey) return ClientId;
-        if (input == UserAddressKey) return tempUserAddress;
-        throw new ArgumentException($"Unknown key: {input}");
+        return input switch
+        {
+            ClientIdKey => ClientId,
+            UserAddressKey => tempUserAddress,
+            _ => throw new ArgumentException($"Unknown key: {input}")
+        };
     }
 }
