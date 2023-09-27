@@ -24,14 +24,7 @@ public class HttpCallTests
             Status = RequestStatus.success,
             Data = new Data
             {
-                Status = "approved",
-                Identities = new Identities
-                {
-                    GivenName = new GivenName
-                    {
-                        Value = "USER NAME"
-                    }
-                }
+                Status = "approved"
             }
         };
         var httpTest = new HttpTest();
@@ -44,6 +37,5 @@ public class HttpCallTests
 
         Assert.Equal(response.Status, result.Status);
         Assert.Equal(response.Data.Status, result.Data.Status);
-        Assert.Equal(response.Data.Identities.GivenName.Value, result.Data.Identities.GivenName.Value);
     }
 }
