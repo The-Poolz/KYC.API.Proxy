@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy", "src\KYC.AP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KYC.API.Proxy.Tests", "tests\KYC.API.Proxy.Tests\KYC.API.Proxy.Tests.csproj", "{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KycWebHook", "src\KYC.DataBase\KycWebHook\KycWebHook.csproj", "{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,6 +38,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{655F6E73-17FD-437B-B76B-C5C8CDB1BDC2} = {0E291973-D91C-486C-A9D2-8926C656A382}
 		{0AB264DD-CE17-4ED3-BA4B-0539625C48F2} = {753B9E81-B38A-4B54-830B-F80B129D5E6F}
+		{2AD5E45D-CBD7-433D-9CB5-4C1C98CD0230} = {0E291973-D91C-486C-A9D2-8926C656A382}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0803A1E1-195C-4AC0-A580-70F2086DE96D}
