@@ -23,7 +23,7 @@ public class LambdaFunctionTests
     {
         Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
         Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
-        Environment.SetEnvironmentVariable("CLIENT_ID", "ClientId");
+        Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
         var secretManager = new Mock<SecretManager>();
         secretManager
             .Setup(s => s.GetSecretValue("SecretId", "SecretApiKey"))

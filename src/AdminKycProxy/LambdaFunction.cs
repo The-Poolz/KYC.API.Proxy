@@ -24,7 +24,7 @@ public class LambdaFunction
 
     public JObject Run(InputData input)
     {
-        var url = new Url($"https://kyc.blockpass.org/kyc/1.0/connect/{lambdaSettings.ClientId}/applicants");
+        var url = new Url(lambdaSettings.Url);
         if (!string.IsNullOrWhiteSpace(input.Status))
             url = url.AppendPathSegment(input.Status);
         if (input.Skip.HasValue)
