@@ -21,7 +21,7 @@ public class LambdaFunction
         this.context = context;
     }
 
-    public async Task<int> Run(HttpResponse httpResponse)
+    public async Task<int> RunAsync(HttpResponse httpResponse)
     {
         Console.WriteLine(JToken.FromObject(httpResponse));
 
