@@ -1,15 +1,26 @@
+using System.Net;
+using AdminKycProxy.Models;
+using ConfiguredSqlConnection.Extensions;
 using Moq;
 using Xunit;
 using SecretsManager;
 using FluentAssertions;
-using AdminKycProxy.Models;
 using Flurl.Http.Testing;
+using KYC.DataBase;
+using KYC.DataBase.Models;
 using Newtonsoft.Json.Linq;
 
 namespace AdminKycProxy.Tests;
 
 public class LambdaFunctionTests
 {
+    public LambdaFunctionTests()
+    {
+        Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
+        Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
+        Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
+    }
+
     [Fact]
     internal void Ctor_Default()
     {
@@ -19,33 +30,43 @@ public class LambdaFunctionTests
     }
 
     [Fact]
-    internal void Run()
+    internal async Task RunAsync()
     {
-        Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
-        Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
-        Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
         var secretManager = new Mock<SecretManager>();
         secretManager
             .Setup(s => s.GetSecretValue("SecretId", "SecretApiKey"))
             .Returns("SecretValue");
 
-        var response = new JObject
+        var response = new HttpResponse
         {
-            { "message", "hello world!" }
+            Data = new Data
+            {
+                Limit = 20,
+                Skip = 0,
+                Total = 1,
+                Records = new[]
+                {
+                    new User
+                    {
+                        Guid = Guid.NewGuid().ToString(),
+                        RecordId = Guid.NewGuid().ToString(),
+                        Status = "approved"
+                    }
+                }
+            }
         };
         using var httpTest = new HttpTest();
-        httpTest.ForCallsTo("https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants/waiting?skip=20&limit=20")
+        httpTest
+            .ForCallsTo("https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants*")
             .RespondWithJson(response);
 
-        var lambda = new LambdaFunction(secretManager.Object);
+        var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
 
-        var result = lambda.Run(new InputData
-        {
-            Status = "waiting",
-            Limit = 20,
-            Skip = 20
-        });
+        var lambda = new LambdaFunction(secretManager.Object, context);
 
-        result.Should().BeEquivalentTo(response);
+        var result = await lambda.RunAsync();
+
+        result.Should().Be(HttpStatusCode.OK);
+        context.Users.Should().HaveCount(1);
     }
 }

@@ -50,7 +50,7 @@ public class LambdaFunction
                 continue;
             }
 
-            await context.Users.AddRangeAsync(response.Data.Records);
+            context.Users.AddRange(response.Data.Records);
 
             skip += MaxRetries;
             url.SetQueryParam("skip", 0);
