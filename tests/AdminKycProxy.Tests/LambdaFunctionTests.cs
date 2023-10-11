@@ -50,15 +50,19 @@ public class LambdaFunctionTests
                     {
                         Guid = Guid.NewGuid().ToString(),
                         RecordId = Guid.NewGuid().ToString(),
-                        Status = "approved"
+                        Status = "approved",
+                        ClientId = "ClientId"
                     }
                 }
             }
         };
         using var httpTest = new HttpTest();
         httpTest
-            .ForCallsTo("https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants*")
+            .ForCallsTo("https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants?skip=0&limit=20")
             .RespondWithJson(response);
+        httpTest
+            .ForCallsTo("https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants?skip=20&limit=20")
+            .RespondWithJson(new HttpResponse());
 
         var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
 
