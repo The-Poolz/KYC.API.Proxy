@@ -40,6 +40,9 @@ public class LambdaFunction
         var actualSignature = StringToSha256(Regex.Unescape(request.Body));
         var signature = request.Headers["X-Hub-Signature"];
 
+        Console.WriteLine($"Actual Signature: {actualSignature}");
+        Console.WriteLine($"Signature: {signature}");
+
         if (actualSignature != signature)
         {
             return new APIGatewayProxyResponse
