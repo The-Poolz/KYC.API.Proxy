@@ -6,6 +6,9 @@ using FluentAssertions;
 using KycWebHook.Models;
 using Amazon.Lambda.APIGatewayEvents;
 using ConfiguredSqlConnection.Extensions;
+using KYC.DataBase.Models;
+using Microsoft.EntityFrameworkCore;
+using TestableDbContext.Mock;
 
 namespace KycWebHook.Tests;
 
@@ -52,13 +55,14 @@ public class LambdaFunctionTests
     [Fact]
     public async Task RunAsync_WhenUserExist()
     {
-        var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
-        context.Users.Add(httpResponse);
-        await context.SaveChangesAsync();
+        var mockContext = MockDbContext<KycDbContext>.GetMockContext();
+        var users = new List<User> { httpResponse };
+        var mockDbSet = MockDbContext.GetMockDbSet(users);
+        mockContext.Setup(x => x.Users).Returns(mockDbSet.Object);
 
-        var result = await new LambdaFunction(context).RunAsync(request);
+        var result = await new LambdaFunction(mockContext.Object).RunAsync(request);
 
         result.Should().BeEquivalentTo(Responses.OkResponse);
-        context.Users.First().Should().BeEquivalentTo(httpResponse);
+        mockContext.Object.Users.First().Should().BeEquivalentTo(httpResponse);
     }
 }
