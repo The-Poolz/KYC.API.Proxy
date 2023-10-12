@@ -1,11 +1,10 @@
-using System.Net;
-using System.Security.Cryptography;
+using System.Text;
 using KYC.DataBase;
 using Newtonsoft.Json;
 using KycWebHook.Models;
 using Amazon.Lambda.Core;
+using System.Security.Cryptography;
 using Amazon.Lambda.APIGatewayEvents;
-using System.Text;
 using System.Text.RegularExpressions;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -31,10 +30,7 @@ public class LambdaFunction
 
         if (!request.Headers.ContainsKey("X-Hub-Signature"))
         {
-            return new APIGatewayProxyResponse
-            {
-                StatusCode = (int)HttpStatusCode.BadRequest
-            };
+            return Responses.MissingSignature;
         }
 
         var actualSignature = StringToSha256(Regex.Unescape(request.Body));
@@ -45,10 +41,7 @@ public class LambdaFunction
 
         if (actualSignature != signature)
         {
-            return new APIGatewayProxyResponse
-            {
-                StatusCode = (int)HttpStatusCode.BadRequest
-            };
+            return Responses.InvalidSignature;
         }
 
         var httpResponse = JsonConvert.DeserializeObject<HttpResponse>(request.Body)!;
@@ -64,10 +57,7 @@ public class LambdaFunction
         }
         await context.SaveChangesAsync();
 
-        return new APIGatewayProxyResponse
-        {
-            StatusCode = (int)HttpStatusCode.OK
-        };
+        return Responses.OkResponse;
     }
 
     public static string StringToSha256(string str)
