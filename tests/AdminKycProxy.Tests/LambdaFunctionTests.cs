@@ -1,14 +1,14 @@
-using System.Net;
-using AdminKycProxy.Models;
-using ConfiguredSqlConnection.Extensions;
 using Moq;
 using Xunit;
+using System.Net;
+using KYC.DataBase;
+using Amazon.Lambda;
 using SecretsManager;
 using FluentAssertions;
 using Flurl.Http.Testing;
-using KYC.DataBase;
 using KYC.DataBase.Models;
-using Newtonsoft.Json.Linq;
+using AdminKycProxy.Models;
+using ConfiguredSqlConnection.Extensions;
 
 namespace AdminKycProxy.Tests;
 
@@ -16,6 +16,7 @@ public class LambdaFunctionTests
 {
     public LambdaFunctionTests()
     {
+        Environment.SetEnvironmentVariable("AWS_REGION", "region");
         Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
         Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
         Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
@@ -48,10 +49,8 @@ public class LambdaFunctionTests
                 {
                     new User
                     {
-                        Guid = Guid.NewGuid().ToString(),
                         RecordId = Guid.NewGuid().ToString(),
-                        Status = "approved",
-                        ClientId = "ClientId"
+                        Status = "approved"
                     }
                 }
             }
@@ -65,8 +64,9 @@ public class LambdaFunctionTests
             .RespondWithJson(new HttpResponse());
 
         var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
+        var client = new Mock<AmazonLambdaClient>();
 
-        var lambda = new LambdaFunction(secretManager.Object, context);
+        var lambda = new LambdaFunction(secretManager.Object, context, client.Object);
 
         var result = await lambda.RunAsync();
 
