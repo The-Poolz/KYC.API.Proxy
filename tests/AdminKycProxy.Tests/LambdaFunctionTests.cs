@@ -15,6 +15,7 @@ public class LambdaFunctionTests
 {
     public LambdaFunctionTests()
     {
+        Environment.SetEnvironmentVariable("DOWNLOADED_FROM", "0");
         Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
         Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
         Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
