@@ -2,7 +2,6 @@ using Moq;
 using Xunit;
 using System.Net;
 using KYC.DataBase;
-using Amazon.Lambda;
 using SecretsManager;
 using FluentAssertions;
 using Flurl.Http.Testing;
@@ -16,7 +15,6 @@ public class LambdaFunctionTests
 {
     public LambdaFunctionTests()
     {
-        Environment.SetEnvironmentVariable("AWS_REGION", "region");
         Environment.SetEnvironmentVariable("SECRET_ID", "SecretId");
         Environment.SetEnvironmentVariable("SECRET_API_KEY", "SecretApiKey");
         Environment.SetEnvironmentVariable("KYC_URL", "https://kyc.blockpass.org/kyc/1.0/connect/ClientId/applicants");
@@ -64,9 +62,8 @@ public class LambdaFunctionTests
             .RespondWithJson(new HttpResponse());
 
         var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
-        var client = new Mock<AmazonLambdaClient>();
 
-        var lambda = new LambdaFunction(secretManager.Object, context, client.Object);
+        var lambda = new LambdaFunction(secretManager.Object, context);
 
         var result = await lambda.RunAsync();
 
