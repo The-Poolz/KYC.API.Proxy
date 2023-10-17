@@ -6,8 +6,8 @@ using Amazon.Lambda;
 using SecretsManager;
 using EnvironmentManager;
 using Amazon.Lambda.Core;
-using AdminKycProxy.Models;
 using Amazon.Lambda.Model;
+using AdminKycProxy.Models;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
