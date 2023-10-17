@@ -34,7 +34,7 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var skip = EnvManager.GetEnvironmentValue<int>("DOWNLOADED_TO");
+        var skip = EnvManager.GetEnvironmentValue<int>("DOWNLOADED_FROM");
         var url = new Url(lambdaSettings.Url);
         url = url.SetQueryParam("skip", skip);
         url = url.SetQueryParam("limit", MaxRetries);
@@ -78,7 +78,7 @@ public class LambdaFunction
             {
                 Variables = new Dictionary<string, string>
                 {
-                    { "DOWNLOADED_TO", downloadedTo.ToString() }
+                    { "DOWNLOADED_FROM", downloadedTo.ToString() }
                 }
             }
         };
