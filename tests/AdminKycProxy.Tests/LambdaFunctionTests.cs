@@ -1,14 +1,13 @@
-using System.Net;
-using AdminKycProxy.Models;
-using ConfiguredSqlConnection.Extensions;
 using Moq;
 using Xunit;
+using System.Net;
+using KYC.DataBase;
 using SecretsManager;
 using FluentAssertions;
 using Flurl.Http.Testing;
-using KYC.DataBase;
 using KYC.DataBase.Models;
-using Newtonsoft.Json.Linq;
+using AdminKycProxy.Models;
+using ConfiguredSqlConnection.Extensions;
 
 namespace AdminKycProxy.Tests;
 
@@ -48,10 +47,8 @@ public class LambdaFunctionTests
                 {
                     new User
                     {
-                        Guid = Guid.NewGuid().ToString(),
                         RecordId = Guid.NewGuid().ToString(),
-                        Status = "approved",
-                        ClientId = "ClientId"
+                        Status = "approved"
                     }
                 }
             }

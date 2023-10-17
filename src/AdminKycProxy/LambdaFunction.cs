@@ -3,6 +3,7 @@ using System.Net;
 using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
+using EnvironmentManager;
 using Amazon.Lambda.Core;
 using AdminKycProxy.Models;
 
@@ -28,7 +29,7 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var skip = 0;
+        var skip = EnvManager.GetEnvironmentValue<int>("DOWNLOADED_FROM", true);
         var url = new Url(lambdaSettings.Url);
         url = url.SetQueryParam("skip", skip);
         url = url.SetQueryParam("limit", MaxRetries);
@@ -47,6 +48,7 @@ public class LambdaFunction
             if (response.Data.Records.Length == 0)
             {
                 hasMore = false;
+                skip = response.Data.Total;
                 continue;
             }
 
