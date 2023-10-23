@@ -14,8 +14,9 @@ internal class LambdaSettings
     public LambdaSettings(SecretManager secretManager)
     {
         this.secretManager = secretManager;
-        secretId = EnvManager.GetEnvironmentValue<string>("SECRET_ID", true);
-        secretApiKey = EnvManager.GetEnvironmentValue<string>("SECRET_API_KEY", true);
-        Url = EnvManager.GetEnvironmentValue<string>("KYC_URL", true);
+        var envManager = new EnvManager();
+        secretId = envManager.GetEnvironmentValue<string>("SECRET_ID", true);
+        secretApiKey = envManager.GetEnvironmentValue<string>("SECRET_API_KEY", true);
+        Url = envManager.GetEnvironmentValue<string>("KYC_URL", true);
     }
 }
