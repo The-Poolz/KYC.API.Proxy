@@ -30,14 +30,14 @@ public class LambdaFunction
     {
         var skip = context.Users.Count();
         var url = lambdaSettings.Url
-                .SetQueryParam("limit", limit);
+                .SetQueryParam("limit", limit)
+                .WithHeader("Authorization", lambdaSettings.SecretApiKey)
+                .WithHeader("cache-control", "no-cache");
 
         while (true)
         {
             var response = await url
                 .SetQueryParam("skip", skip)
-                .WithHeader("Authorization", lambdaSettings.SecretApiKey)
-                .WithHeader("cache-control", "no-cache")
                 .GetJsonAsync<HttpResponse>();
 
             if (response.Data.Records.Length == 0)
