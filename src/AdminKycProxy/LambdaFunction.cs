@@ -29,7 +29,7 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var skip = new EnvManager().GetEnvironmentValue<int>("DOWNLOADED_FROM", true);
+        var skip = context.Users.Count();
         var url = lambdaSettings.Url
                 .SetQueryParam("skip", skip)
                 .SetQueryParam("limit", MaxRetries);
