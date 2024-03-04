@@ -28,28 +28,25 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync()
     {
+        HttpResponse? response = null;
         var skip = context.Users.Count();
         var url = lambdaSettings.Url
                 .SetQueryParam("limit", limit)
                 .WithHeader("Authorization", lambdaSettings.SecretApiKey)
                 .WithHeader("cache-control", "no-cache");
 
-        while (true)
+        while (response == null || response.Data.Records.Length > 0)
         {
-            var response = await url
-                .SetQueryParam("skip", skip)
-                .GetJsonAsync<HttpResponse>();
-
-            if (response.Data.Records.Length == 0)
-            {
-                await context.SaveChangesAsync();
-                return HttpStatusCode.OK;
-            }
+            response = await url
+               .SetQueryParam("skip", skip)
+               .GetJsonAsync<HttpResponse>();
 
             context.Users.AddRange(response.Data.Records.Where(x =>
                 !context.Users.Contains(x)));
 
             skip += limit;
         }
+        await context.SaveChangesAsync();
+        return HttpStatusCode.OK;
     }
 }
