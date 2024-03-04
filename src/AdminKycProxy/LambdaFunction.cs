@@ -3,7 +3,6 @@ using System.Net;
 using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
-using EnvironmentManager;
 using Amazon.Lambda.Core;
 using AdminKycProxy.Models;
 
@@ -13,7 +12,7 @@ namespace AdminKycProxy;
 
 public class LambdaFunction
 {
-    private const int MaxRetries = 20;
+    private const int limit = 20;
     private readonly LambdaSettings lambdaSettings;
     private readonly KycDbContext context;
 
@@ -31,29 +30,25 @@ public class LambdaFunction
     {
         var skip = context.Users.Count();
         var url = lambdaSettings.Url
-                .SetQueryParam("skip", skip)
-                .SetQueryParam("limit", MaxRetries);
+                .SetQueryParam("limit", limit);
 
-        var hasMore = true;
-        while (hasMore)
+        while (true)
         {
             var response = await url
+                .SetQueryParam("skip", skip)
                 .WithHeader("Authorization", lambdaSettings.SecretApiKey)
                 .WithHeader("cache-control", "no-cache")
                 .GetJsonAsync<HttpResponse>();
 
             if (response.Data.Records.Length == 0)
             {
-                hasMore = false;
-                skip = response.Data.Total;
-                continue;
+                break;
             }
 
             context.Users.AddRange(response.Data.Records.Where(x =>
                 !context.Users.Contains(x)));
 
-            skip += MaxRetries;
-            url.SetQueryParam("skip", skip);
+            skip += limit;
         }
 
         await context.SaveChangesAsync();
