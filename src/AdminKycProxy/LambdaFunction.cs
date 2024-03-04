@@ -3,7 +3,6 @@ using System.Net;
 using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
-using EnvironmentManager;
 using Amazon.Lambda.Core;
 using AdminKycProxy.Models;
 
@@ -13,7 +12,7 @@ namespace AdminKycProxy;
 
 public class LambdaFunction
 {
-    private const int MaxRetries = 20;
+    private const int limit = 20;
     private readonly LambdaSettings lambdaSettings;
     private readonly KycDbContext context;
 
@@ -29,37 +28,25 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var skip = new EnvManager().GetEnvironmentValue<int>("DOWNLOADED_FROM", true);
-        var url = new Url(lambdaSettings.Url);
-        url = url.SetQueryParam("skip", skip);
-        url = url.SetQueryParam("limit", MaxRetries);
-
-        var hasMore = true;
-        while (hasMore)
-        {
-            var response = url
+        HttpResponse? response = null;
+        var skip = context.Users.Count();
+        var url = lambdaSettings.Url
+                .SetQueryParam("limit", limit)
                 .WithHeader("Authorization", lambdaSettings.SecretApiKey)
-                .WithHeader("cache-control", "no-cache")
-                .GetAsync()
-                .ReceiveJson<HttpResponse>()
-                .GetAwaiter()
-                .GetResult();
+                .WithHeader("cache-control", "no-cache");
 
-            if (response.Data.Records.Length == 0)
-            {
-                hasMore = false;
-                skip = response.Data.Total;
-                continue;
-            }
+        while (response == null || response.Data.Records.Length > 0)
+        {
+            response = await url
+               .SetQueryParam("skip", skip)
+               .GetJsonAsync<HttpResponse>();
 
-            context.Users.AddRange(response.Data.Records);
+            context.Users.AddRange(response.Data.Records.Where(x =>
+                !context.Users.Contains(x)));
 
-            skip += MaxRetries;
-            url.SetQueryParam("skip", skip);
+            skip += limit;
         }
-
         await context.SaveChangesAsync();
-
         return HttpStatusCode.OK;
     }
 }
