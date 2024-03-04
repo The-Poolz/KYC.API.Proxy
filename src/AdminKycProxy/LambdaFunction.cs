@@ -42,7 +42,8 @@ public class LambdaFunction
 
             if (response.Data.Records.Length == 0)
             {
-                break;
+                await context.SaveChangesAsync();
+                return HttpStatusCode.OK;
             }
 
             context.Users.AddRange(response.Data.Records.Where(x =>
@@ -50,9 +51,5 @@ public class LambdaFunction
 
             skip += limit;
         }
-
-        await context.SaveChangesAsync();
-
-        return HttpStatusCode.OK;
     }
 }
