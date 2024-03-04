@@ -30,20 +30,17 @@ public class LambdaFunction
     public async Task<HttpStatusCode> RunAsync()
     {
         var skip = new EnvManager().GetEnvironmentValue<int>("DOWNLOADED_FROM", true);
-        var url = new Url(lambdaSettings.Url);
-        url = url.SetQueryParam("skip", skip);
-        url = url.SetQueryParam("limit", MaxRetries);
+        var url = lambdaSettings.Url
+                .SetQueryParam("skip", skip)
+                .SetQueryParam("limit", MaxRetries);
 
         var hasMore = true;
         while (hasMore)
         {
-            var response = url
+            var response = await url
                 .WithHeader("Authorization", lambdaSettings.SecretApiKey)
                 .WithHeader("cache-control", "no-cache")
-                .GetAsync()
-                .ReceiveJson<HttpResponse>()
-                .GetAwaiter()
-                .GetResult();
+                .GetJsonAsync<HttpResponse>();
 
             if (response.Data.Records.Length == 0)
             {
@@ -52,7 +49,8 @@ public class LambdaFunction
                 continue;
             }
 
-            context.Users.AddRange(response.Data.Records);
+            context.Users.AddRange(response.Data.Records.Where(x =>
+                !context.Users.Contains(x)));
 
             skip += MaxRetries;
             url.SetQueryParam("skip", skip);
