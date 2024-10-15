@@ -16,7 +16,6 @@
     <PackageReference Include="Flurl.Http" Version="3.2.4" />
     <PackageReference Include="KYC.DataBase" Version="1.0.6" />
     <PackageReference Include="SecretsManager" Version="1.0.0" />
-    <PackageReference Include="Utils.EnvironmentManager" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

@@ -6,9 +6,7 @@ using SecretsManager;
 using Amazon.Lambda.Core;
 using AdminKycProxy.Models;
 using ConfiguredSqlConnection.Extensions;
-using Microsoft.EntityFrameworkCore;
 using EnvironmentManager;
-using EnvironmentManager.Extensions;
 using KYC.DataBase.Models;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -32,7 +30,7 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync(ILambdaContext lambdaContext)
     {
-        var limit = Env.PAGE_SIZE.Get<int>();
+        var limit = new EnvManager().GetEnvironmentValue<int>("PAGE_SIZE", true);
         var skip = _context.Users.Count();
         var url = _lambdaSettings.Url
             .SetQueryParam("limit", limit)

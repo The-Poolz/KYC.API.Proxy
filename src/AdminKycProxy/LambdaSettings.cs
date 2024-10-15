@@ -1,5 +1,5 @@
 ﻿using SecretsManager;
-using EnvironmentManager.Static;
+using EnvironmentManager;
 
 namespace AdminKycProxy;
 
@@ -14,8 +14,9 @@ internal class LambdaSettings
     public LambdaSettings(SecretManager secretManager)
     {
         this.secretManager = secretManager;
-        secretId = EnvManager.Get<string>("SECRET_ID", true);
-        secretApiKey = EnvManager.Get<string>("SECRET_API_KEY", true);
-        Url = EnvManager.Get<string>("KYC_URL", true);
+        var envManager = new EnvManager();
+        secretId = envManager.GetEnvironmentValue<string>("SECRET_ID", true);
+        secretApiKey = envManager.GetEnvironmentValue<string>("SECRET_API_KEY", true);
+        Url = envManager.GetEnvironmentValue<string>("KYC_URL", true);
     }
 }
