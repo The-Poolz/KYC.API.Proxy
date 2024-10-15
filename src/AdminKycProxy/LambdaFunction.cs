@@ -52,7 +52,11 @@ public class LambdaFunction
             catch (FlurlHttpException ex)
             {
                 if (ex.Call.HttpResponseMessage.StatusCode != HttpStatusCode.TooManyRequests) throw;
+
+                _context.Users.AddRange(newUsers);
+                await _context.SaveChangesAsync();
                 return HttpStatusCode.TooManyRequests;
+
             }
 
             var downloadedUsers = response.Data.Records
