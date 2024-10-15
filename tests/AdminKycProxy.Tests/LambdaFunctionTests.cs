@@ -7,6 +7,7 @@ using FluentAssertions;
 using Flurl.Http.Testing;
 using KYC.DataBase.Models;
 using AdminKycProxy.Models;
+using Amazon.Lambda.TestUtilities;
 using ConfiguredSqlConnection.Extensions;
 
 namespace AdminKycProxy.Tests;
@@ -66,7 +67,7 @@ public class LambdaFunctionTests
 
         var lambda = new LambdaFunction(secretManager.Object, context);
 
-        var result = await lambda.RunAsync();
+        var result = await lambda.RunAsync(new TestLambdaContext());
 
         result.Should().Be(HttpStatusCode.OK);
         context.Users.Should().HaveCount(1);
