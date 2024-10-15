@@ -43,20 +43,15 @@ public class LambdaFunction
         var totalRecordsProcessed = 0;
         do
         {
-            var response = await url
-                .SetQueryParam("skip", skip)
-                .AllowHttpStatus(HttpStatusCode.TooManyRequests)
-                .GetAsync();
-
-            if (response.StatusCode == (int)HttpStatusCode.TooManyRequests)
+            var response = await GetHttpResponseAsync(url, skip);
+            if (response == null)
             {
                 _context.Users.AddRange(newUsers);
                 await _context.SaveChangesAsync();
                 return HttpStatusCode.TooManyRequests;
             }
 
-            var responseData = await response.GetJsonAsync<HttpResponse>();
-            var downloadedUsers = responseData.Data.Records
+            var downloadedUsers = response.Data.Records
                 .Where(downloaded => !_context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
                 .ToList();
 
@@ -74,5 +69,15 @@ public class LambdaFunction
         await _context.SaveChangesAsync();
 
         return HttpStatusCode.OK;
+    }
+
+    private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest request, int skip)
+    {
+        var response = await request
+            .SetQueryParam("skip", skip)
+            .AllowHttpStatus(HttpStatusCode.TooManyRequests)
+            .GetAsync();
+
+        return response.StatusCode == (int)HttpStatusCode.OK ? await response.GetJsonAsync<HttpResponse>() : null;
     }
 }
