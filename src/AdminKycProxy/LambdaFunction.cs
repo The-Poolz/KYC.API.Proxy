@@ -4,10 +4,10 @@ using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
 using Amazon.Lambda.Core;
-using AdminKycProxy.Models;
-using ConfiguredSqlConnection.Extensions;
 using EnvironmentManager;
 using KYC.DataBase.Models;
+using AdminKycProxy.Models;
+using ConfiguredSqlConnection.Extensions;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
@@ -30,7 +30,9 @@ public class LambdaFunction
 
     public async Task<HttpStatusCode> RunAsync(ILambdaContext lambdaContext)
     {
+        var envManager = new EnvManager();
         var limit = new EnvManager().GetEnvironmentValue<int>("PAGE_SIZE", true);
+        var maxRecords = envManager.GetEnvironmentValue<int>("MAX_RECORDS_PER_INVOCATION", true);
         var skip = _context.Users.Count();
         var url = _lambdaSettings.Url
             .SetQueryParam("limit", limit)
@@ -41,16 +43,17 @@ public class LambdaFunction
         HttpResponse? response;
         do
         {
-            response = await url
-                .SetQueryParam("skip", skip)
-                .OnError(x =>
-                {
-                    if (x.HttpResponseMessage.StatusCode == HttpStatusCode.TooManyRequests)
-                    {
-                        lambdaContext.Logger.LogInformation(x.Exception.Message);
-                    }
-                })
-                .GetJsonAsync<HttpResponse>();
+            try
+            {
+                response = await url
+                    .SetQueryParam("skip", skip)
+                    .GetJsonAsync<HttpResponse>();
+            }
+            catch (FlurlHttpException ex)
+            {
+                if (ex.Call.HttpResponseMessage.StatusCode != HttpStatusCode.TooManyRequests) throw;
+                return HttpStatusCode.TooManyRequests;
+            }
 
             var downloadedUsers = response.Data.Records
                 .Where(downloaded => !_context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
