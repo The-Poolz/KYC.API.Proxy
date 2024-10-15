@@ -31,7 +31,7 @@ public class LambdaFunction
     public async Task<HttpStatusCode> RunAsync(ILambdaContext lambdaContext)
     {
         var envManager = new EnvManager();
-        var limit = new EnvManager().GetEnvironmentValue<int>("PAGE_SIZE", true);
+        var limit = envManager.GetEnvironmentValue<int>("PAGE_SIZE", true);
         var maxRecords = envManager.GetEnvironmentValue<int>("MAX_RECORDS_PER_INVOCATION", true);
         var skip = _context.Users.Count();
         var url = _lambdaSettings.Url
@@ -40,6 +40,7 @@ public class LambdaFunction
             .WithHeader("cache-control", "no-cache");
 
         var newUsers = new List<User>();
+        var totalRecordsProcessed = 0;
         HttpResponse? response;
         do
         {
@@ -55,8 +56,8 @@ public class LambdaFunction
 
                 _context.Users.AddRange(newUsers);
                 await _context.SaveChangesAsync();
-                return HttpStatusCode.TooManyRequests;
 
+                return HttpStatusCode.TooManyRequests;
             }
 
             var downloadedUsers = response.Data.Records
@@ -66,7 +67,10 @@ public class LambdaFunction
             if (!downloadedUsers.Any()) break;
 
             newUsers.AddRange(downloadedUsers);
+            totalRecordsProcessed += downloadedUsers.Count;
             skip += limit;
+
+            if (totalRecordsProcessed >= maxRecords) break;
 
         } while (response.Data.Records.Length > 0);
 
