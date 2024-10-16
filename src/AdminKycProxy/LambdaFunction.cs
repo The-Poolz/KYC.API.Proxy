@@ -4,39 +4,27 @@ using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
 using Amazon.Lambda.Core;
-using EnvironmentManager;
 using KYC.DataBase.Models;
 using AdminKycProxy.Models;
+using EnvironmentManager.Extensions;
 using ConfiguredSqlConnection.Extensions;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace AdminKycProxy;
 
-public class LambdaFunction
+public class LambdaFunction(SecretManager secretManager, KycDbContext context)
 {
-    private readonly LambdaSettings _lambdaSettings;
-    private readonly KycDbContext _context;
-
     public LambdaFunction()
         : this(new SecretManager(), new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage"))
     { }
 
-    public LambdaFunction(SecretManager secretManager, KycDbContext context)
-    {
-        _lambdaSettings = new LambdaSettings(secretManager);
-        _context = context;
-    }
-
     public async Task<HttpStatusCode> RunAsync(ILambdaContext lambdaContext)
     {
-        var envManager = new EnvManager();
-        var limit = envManager.GetEnvironmentValue<int>("PAGE_SIZE", true);
-        var maxRecords = envManager.GetEnvironmentValue<int>("MAX_RECORDS_PER_INVOCATION", true);
-        var skip = _context.Users.Count();
-        var url = _lambdaSettings.Url
-            .SetQueryParam("limit", limit)
-            .WithHeader("Authorization", _lambdaSettings.SecretApiKey)
+        var skip = context.Users.Count();
+        var url = Env.KYC_URL.Get<string>()
+            .SetQueryParam("limit", Env.PAGE_SIZE.Get<int>())
+            .WithHeader("Authorization", secretManager.GetSecretValue(Env.SECRET_ID.Get<string>(), Env.SECRET_API_KEY.Get<string>()))
             .WithHeader("cache-control", "no-cache");
 
         var newUsers = new List<User>();
@@ -46,29 +34,35 @@ public class LambdaFunction
             var response = await GetHttpResponseAsync(url, skip);
             if (response == null)
             {
-                _context.Users.AddRange(newUsers);
-                await _context.SaveChangesAsync();
+                await SaveNewUsersAsync(newUsers);
                 return HttpStatusCode.TooManyRequests;
             }
 
             var downloadedUsers = response.Data.Records
-                .Where(downloaded => !_context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
+                .Where(downloaded => !context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
                 .ToList();
 
-            if (!downloadedUsers.Any()) break;
+            if (downloadedUsers.Count == 0) break;
 
             newUsers.AddRange(downloadedUsers);
             totalRecordsProcessed += downloadedUsers.Count;
-            skip += limit;
+            skip += Env.PAGE_SIZE.Get<int>();
 
-            if (totalRecordsProcessed >= maxRecords) break;
+            if (totalRecordsProcessed >= Env.MAX_RECORDS_PER_INVOCATION.Get<int>()) break;
 
         } while (true);
 
-        _context.Users.AddRange(newUsers);
-        await _context.SaveChangesAsync();
+        await SaveNewUsersAsync(newUsers);
 
         return HttpStatusCode.OK;
+    }
+
+    private async Task SaveNewUsersAsync(List<User> newUsers)
+    {
+        if (newUsers.Count == 0) return;
+
+        context.Users.AddRange(newUsers);
+        await context.SaveChangesAsync();
     }
 
     private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest request, int skip)
