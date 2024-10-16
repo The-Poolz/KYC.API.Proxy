@@ -6,6 +6,7 @@ using SecretsManager;
 using Amazon.Lambda.Core;
 using KYC.DataBase.Models;
 using AdminKycProxy.Models;
+using KYC.DataBase.Models.Types;
 using EnvironmentManager.Extensions;
 using ConfiguredSqlConnection.Extensions;
 
@@ -19,23 +20,31 @@ public class LambdaFunction(SecretManager secretManager, KycDbContext context)
         : this(new SecretManager(), new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage"))
     { }
 
-    public async Task<HttpStatusCode> RunAsync(ILambdaContext lambdaContext)
+    public HttpStatusCode Run()
     {
-        var skip = context.Users.Count();
         var url = Env.KYC_URL.Get<string>()
             .SetQueryParam("limit", Env.PAGE_SIZE.Get<int>())
             .WithHeader("Authorization", secretManager.GetSecretValue(Env.SECRET_ID.Get<string>(), Env.SECRET_API_KEY.Get<string>()))
             .WithHeader("cache-control", "no-cache");
 
+        var totalApiCalls = 0;
+
+        Parallel.ForEach(Enum.GetValues<Status>(), status => ProcessStatus(url, status, ref totalApiCalls));
+
+        return HttpStatusCode.OK;
+    }
+
+    private void ProcessStatus(IFlurlRequest url, Status status, ref int totalApiCalls)
+    {
         var newUsers = new List<User>();
-        var totalRecordsProcessed = 0;
+        var skip = context.Users.Count(x => x.Status == status);
         do
         {
-            var response = await GetHttpResponseAsync(url, skip);
+            var response = GetHttpResponse(url, status, skip);
             if (response == null)
             {
-                await SaveNewUsersAsync(newUsers);
-                return HttpStatusCode.TooManyRequests;
+                SaveNewUsers(newUsers);
+                break;
             }
 
             var downloadedUsers = response.Data.Records
@@ -45,33 +54,37 @@ public class LambdaFunction(SecretManager secretManager, KycDbContext context)
             if (downloadedUsers.Count == 0) break;
 
             newUsers.AddRange(downloadedUsers);
-            totalRecordsProcessed += downloadedUsers.Count;
+            totalApiCalls++;
             skip += Env.PAGE_SIZE.Get<int>();
 
-            if (totalRecordsProcessed >= Env.MAX_RECORDS_PER_INVOCATION.Get<int>()) break;
+            if (totalApiCalls >= Env.MAX_API_CALLS_PER_INVOCATION.Get<int>()) break;
 
         } while (true);
 
-        await SaveNewUsersAsync(newUsers);
-
-        return HttpStatusCode.OK;
+        SaveNewUsers(newUsers);
     }
 
-    private async Task SaveNewUsersAsync(List<User> newUsers)
+    private void SaveNewUsers(List<User> newUsers)
     {
         if (newUsers.Count == 0) return;
 
         context.Users.AddRange(newUsers);
-        await context.SaveChangesAsync();
+        context.SaveChanges();
     }
 
-    private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest request, int skip)
+    private static HttpResponse? GetHttpResponse(IFlurlRequest request, Status status, int skip)
     {
-        var response = await request
+        var response = request
             .SetQueryParam("skip", skip)
+            .AppendPathSegment(status)
             .AllowHttpStatus(HttpStatusCode.TooManyRequests)
-            .GetAsync();
+            .GetAsync()
+            .GetAwaiter()
+            .GetResult();
 
-        return response.StatusCode == (int)HttpStatusCode.OK ? await response.GetJsonAsync<HttpResponse>() : null;
+        return response.StatusCode != (int)HttpStatusCode.OK ? null : response
+            .GetJsonAsync<HttpResponse>()
+            .GetAwaiter()
+            .GetResult();
     }
 }

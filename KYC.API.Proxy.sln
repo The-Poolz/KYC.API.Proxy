@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KycWebHook", "src\KYC.DataB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KycWebHook.Tests", "tests\KycWebHook.Tests\KycWebHook.Tests.csproj", "{3512E4A0-B56D-4F3F-A75D-300241282C8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdminKycProxy", "src\AdminKycProxy\AdminKycProxy.csproj", "{2590736F-E4A1-404C-86E7-A86C4050D718}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdminKycProxy", "src\AdminKycProxy\AdminKycProxy.csproj", "{2590736F-E4A1-404C-86E7-A86C4050D718}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
