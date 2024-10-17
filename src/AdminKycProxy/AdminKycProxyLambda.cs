@@ -45,8 +45,9 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
             .WithHeader("cache-control", "no-cache")
             .SetQueryParam("limit", 1);
 
+        var users = context.Users.Where(x => x.Status == status).ToArray();
         var response = await GetHttpResponseAsync(url, skip - 1);
-        if (response != null && response.Data.Records.Length != 0 && context.Users.Last(x => x.Status == status) != response.Data.Records.First())
+        if (response != null && response.Data.Records.Length != 0 && users.Length != 0 && users.Last().RefId != response.Data.Records.First().RefId)
         {
             context.Users.RemoveRange(context.Users.Where(x => x.Status == status));
             await context.SaveChangesAsync();
@@ -59,7 +60,7 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
             if (response == null) break;
 
             var downloadedUsers = response.Data.Records
-                .Where(downloaded => !context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
+                .Where(downloaded => users.All(dbUser => dbUser.RefId != downloaded.RefId))
                 .ToList();
 
             if (downloadedUsers.Count == 0) break;
