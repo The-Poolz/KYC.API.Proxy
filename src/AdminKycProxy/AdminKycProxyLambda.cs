@@ -33,7 +33,10 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
             .WithHeader("Authorization", secretManager.GetSecretValue(Env.SECRET_ID.Get<string>(), Env.SECRET_API_KEY.Get<string>()))
             .WithHeader("cache-control", "no-cache");
 
-        await Parallel.ForEachAsync(Enum.GetValues<Status>(), async (status, _) => await ProcessStatusAsync(url, status));
+        foreach (var status in Enum.GetValues<Status>())
+        {
+            await ProcessStatusAsync(url.AppendPathSegment(status), status);
+        }
 
         return HttpStatusCode.OK;
     }
@@ -42,9 +45,10 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
     {
         var newUsers = new List<User>();
         var skip = context.Users.Count(x => x.Status == status);
+
         do
         {
-            var response = await GetHttpResponseAsync(url, status, skip);
+            var response = await GetHttpResponseAsync(url, skip);
             if (response == null)
             {
                 await SaveNewUsersAsync(newUsers);
@@ -72,13 +76,12 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
         await context.SaveChangesAsync();
     }
 
-    private async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest request, Status status, int skip)
+    private async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest url, int skip)
     {
         return await rateLimiter.ExecuteAsync(async () =>
         {
-            var response = await request
+            var response = await url
                 .SetQueryParam("skip", skip)
-                .AppendPathSegment(status)
                 .AllowHttpStatus(HttpStatusCode.TooManyRequests)
                 .GetAsync();
 
