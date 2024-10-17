@@ -1,12 +1,9 @@
 using Flurl;
-using Polly;
 using System.Net;
 using Flurl.Http;
 using KYC.DataBase;
 using SecretsManager;
-using Polly.RateLimit;
 using Amazon.Lambda.Core;
-using KYC.DataBase.Models;
 using AdminKycProxy.Models;
 using KYC.DataBase.Models.Types;
 using EnvironmentManager.Extensions;
@@ -16,44 +13,50 @@ using ConfiguredSqlConnection.Extensions;
 
 namespace AdminKycProxy;
 
-public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext context, AsyncRateLimitPolicy rateLimiter)
+public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext context)
 {
     public AdminKycProxyLambda()
         : this(
             secretManager: new SecretManager(),
-            context: new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage"),
-            rateLimiter: Policy.RateLimitAsync(Env.MAX_API_CALLS_PER_INVOCATION.Get<int>(), TimeSpan.FromMinutes(1))
+            context: new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage")
         )
     { }
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var url = Env.KYC_URL.Get<string>()
-            .SetQueryParam("limit", Env.PAGE_SIZE.Get<int>())
-            .WithHeader("Authorization", secretManager.GetSecretValue(Env.SECRET_ID.Get<string>(), Env.SECRET_API_KEY.Get<string>()))
-            .WithHeader("cache-control", "no-cache");
-
         foreach (var status in Enum.GetValues<Status>())
         {
-            await ProcessStatusAsync(url.AppendPathSegment(status), status);
+            await ProcessStatusAsync(status);
         }
+
+        var processed = await context.SaveChangesAsync();
+        LambdaLogger.Log($"Processed entities: {processed}");
 
         return HttpStatusCode.OK;
     }
 
-    private async Task ProcessStatusAsync(IFlurlRequest url, Status status)
+    private async Task ProcessStatusAsync(Status status)
     {
-        var newUsers = new List<User>();
         var skip = context.Users.Count(x => x.Status == status);
 
+        var url = Env.KYC_URL.Get<string>()
+            .AppendPathSegment(status)
+            .WithHeader("Authorization", secretManager.GetSecretValue(Env.SECRET_ID.Get<string>(), Env.SECRET_API_KEY.Get<string>()))
+            .WithHeader("cache-control", "no-cache")
+            .SetQueryParam("limit", 1);
+
+        var response = await GetHttpResponseAsync(url, skip - 1);
+        if (response != null && response.Data.Records.Length != 0 && context.Users.Last(x => x.Status == status) != response.Data.Records.First())
+        {
+            context.Users.RemoveRange(context.Users.Where(x => x.Status == status));
+            await context.SaveChangesAsync();
+        }
+
+        url = url.SetQueryParam("limit", Env.PAGE_SIZE.Get<int>());
         do
         {
-            var response = await GetHttpResponseAsync(url, skip);
-            if (response == null)
-            {
-                await SaveNewUsersAsync(newUsers);
-                break;
-            }
+            response = await GetHttpResponseAsync(url, skip);
+            if (response == null) break;
 
             var downloadedUsers = response.Data.Records
                 .Where(downloaded => !context.Users.Any(dbUser => dbUser.RefId == downloaded.RefId))
@@ -61,31 +64,18 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
 
             if (downloadedUsers.Count == 0) break;
 
-            newUsers.AddRange(downloadedUsers);
+            context.Users.AddRange(downloadedUsers);
             skip += Env.PAGE_SIZE.Get<int>();
         } while (true);
-
-        await SaveNewUsersAsync(newUsers);
     }
 
-    private async Task SaveNewUsersAsync(List<User> newUsers)
+    private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest url, int skip)
     {
-        if (newUsers.Count == 0) return;
+        var response = await url
+            .SetQueryParam("skip", skip)
+            .AllowHttpStatus(HttpStatusCode.TooManyRequests)
+            .GetAsync();
 
-        context.Users.AddRange(newUsers);
-        await context.SaveChangesAsync();
-    }
-
-    private async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest url, int skip)
-    {
-        return await rateLimiter.ExecuteAsync(async () =>
-        {
-            var response = await url
-                .SetQueryParam("skip", skip)
-                .AllowHttpStatus(HttpStatusCode.TooManyRequests)
-                .GetAsync();
-
-            return response.StatusCode != (int)HttpStatusCode.OK ? null : await response.GetJsonAsync<HttpResponse>();
-        });
+        return response.StatusCode != (int)HttpStatusCode.OK ? null : await response.GetJsonAsync<HttpResponse>();
     }
 }
