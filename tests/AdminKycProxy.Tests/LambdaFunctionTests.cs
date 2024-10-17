@@ -25,7 +25,7 @@ public class LambdaFunctionTests
     [Fact]
     internal void Ctor_Default()
     {
-        var lambda = new LambdaFunction();
+        var lambda = new AdminKycProxyLambda();
 
         lambda.Should().NotBeNull();
     }
@@ -65,7 +65,7 @@ public class LambdaFunctionTests
 
         var context = new DbContextFactory<KycDbContext>().Create(ContextOption.InMemory, Guid.NewGuid().ToString());
 
-        var lambda = new LambdaFunction(secretManager.Object, context);
+        var lambda = new AdminKycProxyLambda(secretManager.Object, context);
 
         var result = await lambda.RunAsync(new TestLambdaContext());
 
