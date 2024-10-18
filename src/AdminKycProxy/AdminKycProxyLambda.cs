@@ -24,9 +24,11 @@ public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var tasks = Enum.GetValues<Status>().Select(ProcessStatusAsync).ToList();
-
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(
+            Enum.GetValues<Status>()
+                .Select(ProcessStatusAsync)
+                .ToList()
+        );
 
         return HttpStatusCode.OK;
     }
@@ -45,7 +47,7 @@ public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<
 
         var users = context.Users.Where(x => x.Status == status).ToArray();
         var response = await GetHttpResponseAsync(url, skip - 1);
-        if (response != null && response.Data.Records.Length != 0 && users.Length != 0 && users.Last().RefId != response.Data.Records.First().RefId)
+        if (response?.Data.Records.Length > 0 && users.Length > 0 && users.Last().RefId != response.Data.Records.First().RefId)
         {
             context.Users.RemoveRange(context.Users.Where(x => x.Status == status));
             await context.SaveChangesAsync();
