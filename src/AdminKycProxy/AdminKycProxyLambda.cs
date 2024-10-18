@@ -7,35 +7,35 @@ using Amazon.Lambda.Core;
 using AdminKycProxy.Models;
 using KYC.DataBase.Models.Types;
 using EnvironmentManager.Extensions;
-using ConfiguredSqlConnection.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace AdminKycProxy;
 
-public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext context)
+public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<KycDbContext> contextFactory)
 {
     public AdminKycProxyLambda()
         : this(
             secretManager: new SecretManager(),
-            context: new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage")
+            contextFactory: new KycDbContextFactory()
         )
     { }
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        foreach (var status in Enum.GetValues<Status>())
+        var tasks = Enum.GetValues<Status>().Select(status =>
         {
-            await ProcessStatusAsync(status);
-        }
+            using var context = contextFactory.CreateDbContext();
+            return ProcessStatusAsync(status, context);
+        }).ToList();
 
-        var processed = await context.SaveChangesAsync();
-        LambdaLogger.Log($"Processed entities: {processed}");
+        await Task.WhenAll(tasks);
 
         return HttpStatusCode.OK;
     }
 
-    private async Task ProcessStatusAsync(Status status)
+    private async Task ProcessStatusAsync(Status status, KycDbContext context)
     {
         var skip = context.Users.Count(x => x.Status == status);
 
@@ -68,6 +68,9 @@ public class AdminKycProxyLambda(SecretManager secretManager, KycDbContext conte
             context.Users.AddRange(downloadedUsers);
             skip += Env.PAGE_SIZE.Get<int>();
         } while (true);
+
+        var processed = await context.SaveChangesAsync();
+        LambdaLogger.Log($"Added entities for '{status}' status: {processed}");
     }
 
     private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest url, int skip)
