@@ -24,19 +24,17 @@ public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<
 
     public async Task<HttpStatusCode> RunAsync()
     {
-        var tasks = Enum.GetValues<Status>().Select(status =>
-        {
-            using var context = contextFactory.CreateDbContext();
-            return ProcessStatusAsync(status, context);
-        }).ToList();
+        var tasks = Enum.GetValues<Status>().Select(ProcessStatusAsync).ToList();
 
         await Task.WhenAll(tasks);
 
         return HttpStatusCode.OK;
     }
 
-    private async Task ProcessStatusAsync(Status status, KycDbContext context)
+    private async Task ProcessStatusAsync(Status status)
     {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
         var skip = context.Users.Count(x => x.Status == status);
 
         var url = Env.KYC_URL.Get<string>()
