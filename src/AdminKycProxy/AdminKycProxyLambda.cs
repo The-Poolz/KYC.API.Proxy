@@ -50,7 +50,8 @@ public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<
         if (response?.Data.Records.Length > 0 && users.Length > 0 && users.Last().RefId != response.Data.Records.First().RefId)
         {
             context.Users.RemoveRange(context.Users.Where(x => x.Status == status));
-            await context.SaveChangesAsync();
+            var deleted = await context.SaveChangesAsync();
+            LambdaLogger.Log($"DELETED: For '{status}' status: {deleted}");
         }
 
         url = url.SetQueryParam("limit", Env.PAGE_SIZE.Get<int>());
@@ -69,8 +70,8 @@ public class AdminKycProxyLambda(SecretManager secretManager, IDbContextFactory<
             skip += Env.PAGE_SIZE.Get<int>();
         } while (true);
 
-        var processed = await context.SaveChangesAsync();
-        LambdaLogger.Log($"Added entities for '{status}' status: {processed}");
+        var added = await context.SaveChangesAsync();
+        LambdaLogger.Log($"ADDED: For '{status}' status: {added}");
     }
 
     private static async Task<HttpResponse?> GetHttpResponseAsync(IFlurlRequest url, int skip)
