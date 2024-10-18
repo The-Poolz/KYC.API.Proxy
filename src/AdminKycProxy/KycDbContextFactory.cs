@@ -8,6 +8,6 @@ public class KycDbContextFactory : IDbContextFactory<KycDbContext>
 {
     public KycDbContext CreateDbContext()
     {
-        return new DbContextFactory<KycDbContext>().Create(ContextOption.Staging, "Stage");
+        return new DbContextFactory<KycDbContext>().Create(ContextOption.Prod);
     }
 }
