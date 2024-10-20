@@ -30,9 +30,10 @@ public class LambdaFunction(Proxy.LambdaFunction kycFunc)
                     responses.Add(new LambdaResponse(checksumAddress, response));
                     success = true;
                 }
-                catch (FlurlHttpException)
+                catch (FlurlHttpException ex)
                 {
                     Console.WriteLine($"Error processing address: {address}. Retrying...");
+                    Console.WriteLine(ex.Message);
                     await Task.Delay(2500);
                 }
             }
