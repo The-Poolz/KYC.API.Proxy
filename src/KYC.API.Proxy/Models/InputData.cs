@@ -1,8 +1,10 @@
-﻿namespace KYC.API.Proxy.Models;
+﻿using Net.Web3.EthereumWallet;
+using Net.Web3.EthereumWallet.Extensions;
+
+namespace KYC.API.Proxy.Models;
 
 public class InputData
 {
-    public const string ZeroAddress = "0x0000000000000000000000000000000000000000";
     public string Address { get; set; } = null!;
-    public bool Valid => !string.IsNullOrWhiteSpace(Address) && Address != ZeroAddress;
+    public bool Valid => !string.IsNullOrWhiteSpace(Address) && Address != EthereumAddress.ZeroAddress && Address.IsValidEthereumAddressHexFormat();
 }
