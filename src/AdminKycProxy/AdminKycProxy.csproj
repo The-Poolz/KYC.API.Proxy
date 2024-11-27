@@ -11,10 +11,15 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.2.3" />
     <PackageReference Include="Flurl.Http" Version="3.2.4" />
-    <PackageReference Include="KYC.DataBase" Version="1.0.6" />
+    <PackageReference Include="KYC.DataBase" Version="1.0.8" />
     <PackageReference Include="SecretsManager" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
