@@ -18,8 +18,7 @@ namespace KYC.API.Proxy
 
         public OutputData Run(InputData request)
         {
-            if (!request.Valid)
-                return OutputData.Error;
+            if (!request.Valid) throw new ArgumentException("Invalid lambda argument.", nameof(request.Address));
 
             var scenarios = new List<Func<InputData, OutputData?>>
             {

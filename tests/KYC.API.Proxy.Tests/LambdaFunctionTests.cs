@@ -2,6 +2,7 @@ using Moq;
 using Xunit;
 using KYC.API.Proxy.Utils;
 using KYC.API.Proxy.Models;
+using Net.Web3.EthereumWallet;
 using KYC.API.Proxy.Models.HttpResponse;
 
 namespace KYC.API.Proxy.Tests;
@@ -29,13 +30,13 @@ public class LambdaFunctionTests
     {
         var request = new InputData
         {
-            Address = InputData.ZeroAddress
+            Address = EthereumAddress.ZeroAddress
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var result = lambdaFunction.Run(request);
+        var testCode = () => lambdaFunction.Run(request);
 
-        Assert.Equal(RequestStatus.error, result.RequestStatus);
+        Assert.Throws<ArgumentException>(testCode);
     }
 
     [Fact]
@@ -43,10 +44,9 @@ public class LambdaFunctionTests
     {
         var request = new InputData();
         var lambdaFunction = MockLambdaFunction();
+        var testCode = () => lambdaFunction.Run(request);
 
-        var result = lambdaFunction.Run(request);
-
-        Assert.Equal(RequestStatus.error, result.RequestStatus);
+        Assert.Throws<ArgumentException>(testCode);
     }
 
     [Fact]
