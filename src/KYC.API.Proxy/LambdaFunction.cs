@@ -4,37 +4,30 @@ using KYC.API.Proxy.Models;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace KYC.API.Proxy
+namespace KYC.API.Proxy;
+
+public class LambdaFunction(HttpCall httpCall, DynamoDb dynamoDb) : LambdaFunctionScenarios(httpCall, dynamoDb)
 {
-    public class LambdaFunction : LambdaFunctionScenarios
+    public LambdaFunction()
+        : this(new HttpCall(), new DynamoDb())
+    { }
+
+    public OutputData Run(InputData request)
     {
-        public LambdaFunction()
-            : this(new HttpCall(), new DynamoDb())
-        { }
+        if (!request.Valid) return OutputData.Error;
 
-        public LambdaFunction(HttpCall httpCall, DynamoDb dynamoDb)
-            : base(httpCall, dynamoDb)
-        { }
-
-        public OutputData Run(InputData request)
+        var scenarios = new List<Func<InputData, OutputData?>>
         {
-            if (!request.Valid) throw new ArgumentException("Invalid lambda argument.", nameof(request.Address));
+            HandleBlockPassResponse,
+            HandleProxyAddress,
+            HandleValidWallet
+        };
 
-            var scenarios = new List<Func<InputData, OutputData?>>
-            {
-                HandleBlockPassResponse,
-                HandleProxyAddress,
-                HandleValidWallet
-            };
-
-            foreach (var scenario in scenarios)
-            {
-                var result = scenario(request);
-                if (result != null)
-                    return result;
-            }
-
-            return OutputData.Error;
+        foreach (var result in scenarios.Select(scenario => scenario(request)).OfType<OutputData>())
+        {
+            return result;
         }
+
+        return OutputData.Error;
     }
 }

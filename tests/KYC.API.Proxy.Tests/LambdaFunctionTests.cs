@@ -34,9 +34,9 @@ public class LambdaFunctionTests
         };
         var lambdaFunction = MockLambdaFunction();
 
-        var testCode = () => lambdaFunction.Run(request);
+        var result = lambdaFunction.Run(request);
 
-        Assert.Throws<ArgumentException>(testCode);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
@@ -44,9 +44,9 @@ public class LambdaFunctionTests
     {
         var request = new InputData();
         var lambdaFunction = MockLambdaFunction();
-        var testCode = () => lambdaFunction.Run(request);
+        var result = lambdaFunction.Run(request);
 
-        Assert.Throws<ArgumentException>(testCode);
+        Assert.Equal(RequestStatus.error, result.RequestStatus);
     }
 
     [Fact]
