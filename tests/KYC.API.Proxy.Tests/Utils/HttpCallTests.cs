@@ -1,6 +1,4 @@
-﻿using Moq;
-using Xunit;
-using SecretsManager;
+﻿using Xunit;
 using Flurl.Http.Testing;
 using KYC.API.Proxy.Utils;
 using KYC.API.Proxy.Models;
@@ -15,10 +13,8 @@ public class HttpCallTests
     {
         Environment.SetEnvironmentVariable("BLOCKPASS_URI", "https://kyc.blockpass.org/kyc/1.0/connect/[ClientId]/refId/[UserAddress]");
         Environment.SetEnvironmentVariable("CLIENT_ID", "ClientId");
-        var secretManager = new Mock<SecretManager>();
-        secretManager.Setup(x => x.GetSecretValue("SecretId", "SecretValue"))
-            .Returns("SecretString");
-        var lambdaSettings = new LambdaSettings(secretManager.Object);
+        Environment.SetEnvironmentVariable("API_KEY", "very-secret-api-key");
+        var lambdaSettings = new LambdaSettings();
         var response = new Response
         {
             Status = RequestStatus.success,

@@ -1,6 +1,4 @@
-﻿using Moq;
-using Xunit;
-using SecretsManager;
+﻿using Xunit;
 
 namespace KYC.API.Proxy.Tests.Utils;
 
@@ -9,10 +7,7 @@ public class LambdaSettingsTests
     [Fact]
     internal void GetValue_ThrowExceptionOnKeyNotFound()
     {
-        var secretManager = new Mock<SecretManager>();
-        secretManager.Setup(x => x.GetSecretValue("SecretId", "SecretValue"))
-            .Returns("SecretString");
-        var lambdaSettings = new LambdaSettings(secretManager.Object);
+        var lambdaSettings = new LambdaSettings();
 
         void TestCode() => lambdaSettings.GetValue("invalid key");
 
