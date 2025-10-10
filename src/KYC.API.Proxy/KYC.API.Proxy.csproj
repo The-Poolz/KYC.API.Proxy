@@ -11,8 +11,8 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.2.4" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.201.8" />
     <PackageReference Include="Flurl.Http" Version="3.2.4" />
     <PackageReference Include="Net.Web3.EthereumWallet" Version="1.1.1" />
